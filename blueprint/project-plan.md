@@ -6,9 +6,11 @@ I want to use the same engineering workflow across my personal GitHub projects, 
 
 This repo will hold the canonical development workflow, reusable role skills, handoff templates, and harness setup instructions. A mission follows the same path whether it begins in a bot chat, a Trello card, a GitHub issue, or a manual request. The mission carries a target project, a goal, acceptance criteria when available, and an optional source reference.
 
-The workflow starts with investigation and planning. I approve the plan before coding begins. The coder works on a dedicated branch and worktree. A separate reviewer assesses the candidate commit against the original mission and approved plan. The reviewer receives the code and test evidence without the coder’s chat or self-assessment. Blocking findings return to the coder, and the next review evaluates the revised commit in a fresh session. A passing review leads to a GitHub PR and CI. A human decides whether to merge.
+The first time a target repository uses the workflow, the operator runs **Initiate** before the investigator session. Initiate uses a prerequisite checklist to identify, install, and verify the required skills for the selected harness. The initial list is Graphify, Grill Me, and the thermonuclear code quality review skill. Reuse working installations. Record successful setup with a repository marker once all required skills are available. On later missions, a valid marker and a quick readiness check let the workflow proceed directly to investigation. If a marked checkout is missing a prerequisite, report what needs repair.
 
-The first milestone proves the investigator-to-planner handoff on one test repo. After that, the MVP adds implementation and review to prove the full manual workflow. A future controller can automate the transitions, approvals, retries, and delivery using those same handoffs.
+After setup, the workflow starts each mission with investigation and planning. I approve the plan before coding begins. The coder works on a dedicated branch and worktree. A separate reviewer assesses the candidate commit against the original mission and approved plan. The reviewer receives the code and test evidence without the coder’s chat or self-assessment. Blocking findings return to the coder, and the next review evaluates the revised commit in a fresh session. A passing review leads to a GitHub PR and CI. A human decides whether to merge.
+
+The first milestone proves one-time initiation and the investigator-to-planner handoff on one test repo. After that, the MVP adds implementation and review to prove the full manual workflow. A future controller can automate the transitions, approvals, retries, and delivery using those same handoffs.
 
 ## 2. Users - Who is this for?
 
@@ -19,6 +21,7 @@ The first milestone proves the investigator-to-planner handoff on one test repo.
 ## 3. Features - What does the MVP need?
 
 - A canonical development workflow that documents each stage, handoff, and approval.
+- An Initiate skill and prerequisite checklist for first-time target-repository setup.
 - Portable skills for investigation, planning, implementation, and independent review.
 - Reusable templates for the mission, investigation brief, implementation plan, test evidence, and review findings.
 - A manual quickstart that proves the investigation and planning handoff in two fresh sessions.
@@ -29,7 +32,7 @@ The first milestone proves the investigator-to-planner handoff on one test repo.
 ## 4. Data - What are we storing?
 
 - **In this repo** — Workflow definitions, skill instructions, handoff templates, harness setup notes, and sample missions with example outputs.
-- **In each target repo** — Project rules, base branch, build and test commands, and any additional constraints for that project.
+- **In each target repo** — Project rules, base branch, build and test commands, any additional constraints, and a marker recording completed workflow setup.
 - **For each real mission** — The source reference, investigation brief, approved plan, candidate commit, test results, review verdict, and PR link. During the manual pilot, these travel as explicit handoff files. A future controller can persist them with the workflow stage and retry history.
 - **In the runtime’s credential store** — Model provider and integration credentials. Keep credentials and real mission outputs outside the shared skills repo.
 
@@ -64,7 +67,8 @@ The pack itself has no build command, start command, database, worker, environme
 
 - Start with one operator, one test repo, and one mission at a time. Validate the handoffs before using the workflow across multiple projects.
 - Keep the builder on a local or private network for the pilot.
+- Run Initiate with authorized write access to the target repository before starting read-only investigation. Record completion only after verifying the required skills for the selected harness.
 - Give each role a fresh session and pass context through explicit handoffs. Enforce read-only access for investigation and review and grant the coder write access to its worktree.
 - Pause before implementation if a missing decision would change scope or acceptance criteria. Pause for human input after two unsuccessful repair attempts.
 - Bind a passing review to the exact candidate commit. A revised commit requires a fresh review.
-- Keep the initial scope to the shared pack and manual workflow. The installer, automated controller, MCP server, bot and Trello connectors, and custom dashboard are follow-up work.
+- Keep the initial scope to the shared pack, operator-led initiation, and manual workflow. The versioned installer for repeatable updates, automated controller, MCP server, bot and Trello connectors, and custom dashboard are follow-up work.

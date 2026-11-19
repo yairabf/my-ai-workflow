@@ -1,12 +1,12 @@
 # My AI Workflow - Project Overview
 
-<!-- blueprint:source-hash 5a0374c21ef3840698e4e4740a12b7f4018edffb28a25022a3f7cdb47916234a -->
+<!-- blueprint:source-hash be6415773456e0a920c68345383b8a5138cf5ab175611c4057241bd87bf4be1d -->
 
 > A reusable development workflow and skills pack for Pi, OpenCode, Claude Code, and Codex.
 
 ## Problem
 
-Switching repositories or agent harnesses means moving skills and rewriting prompts, which makes handoffs inconsistent. A canonical workflow, role skills, and handoff templates give each fresh session the context it needs and let reviewers assess a specific commit independently.
+Switching repositories or agent harnesses means moving skills and rewriting prompts, which makes handoffs inconsistent. Initiate prepares a target repository before its first mission. A canonical workflow, role skills, and handoff templates give each fresh session the context it needs and let reviewers assess a specific commit independently.
 
 ## Users
 
@@ -17,19 +17,22 @@ Switching repositories or agent harnesses means moving skills and rewriting prom
 ## Usage model
 
 - Pilot with one operator, one test repository, and one mission at a time. Keep the builder on a local or private network.
+- The operator runs Initiate with authorized write access before the first investigation. Reuse working installations and record completion only after the selected harness can use Graphify, Grill Me, and thermonuclear code quality review. With a valid marker and all prerequisites available, start investigation directly. If a marked checkout is missing a prerequisite, report what needs repair.
 - Start roles in fresh sessions with explicit handoff files. Investigation and review have read-only access. Implementation can write to its dedicated worktree.
 - Require human approval of the plan before coding. Pause for a decision when missing information would change scope or acceptance criteria.
 - Review the exact candidate commit against the original mission, approved plan, code, and test evidence. Keep the coder's chat and self-assessment out of the review handoff.
 - Return blocking findings to the coder. Review each revised commit in a fresh session and pause for human input after two unsuccessful repair attempts. A passing review leads to a PR and target-repository CI. A human decides whether to merge.
-- Keep the first release manual. The installer, controller, MCP server, bot and Trello connectors, and custom dashboard are follow-up work.
+- Keep the first release manual. The versioned installer for repeatable updates, controller, MCP server, bot and Trello connectors, and custom dashboard are follow-up work.
 
 ## Features
 
 ### First milestone
 
+- **Build item 15. Initiate target repository** - Install and verify missing prerequisites, record successful setup, and skip initiation for ready repositories on later missions.
+
 1. **Investigator skill** - Produce a read-only brief with code references, verified findings, assumptions, and open questions.
 2. **Planner skill and approval handoff** - Turn the mission and brief into a plan with acceptance criteria and tests for human approval.
-3. **Harness setup and first pilot** - Document setup for all four harnesses and prove the handoff in two fresh Pi sessions on the OpenHands builder.
+3. **Harness setup and first pilot** - Document setup for all four harnesses, verify first-time initiation and repeat entry, and prove the handoff in two fresh Pi sessions on the OpenHands builder.
 
 ### Manual MVP
 
@@ -54,6 +57,7 @@ Manual missions travel as explicit handoff files. These fields describe the info
 
 | Record | Fields |
 | --- | --- |
+| Target repository setup marker | Repository-local record of completed prerequisite setup. Readiness also depends on prerequisite availability in the selected harness. |
 | Mission | Target repository reference, goal text, acceptance criteria when available (list), optional source reference (bot, Trello, GitHub issue, or manual intake) |
 | Target repository context | Project rules, base branch name, build and test commands, additional project constraints |
 | Investigation brief | Mission reference, code references, verified findings, assumptions, open questions |
@@ -87,5 +91,7 @@ Distribute the pack through a private GitHub repository. Target projects adopt a
 ## Open questions
 
 > TODO Assign the canonical workflow document and reusable templates to build-plan items. The project plan names them as MVP deliverables and the build plan leaves their ownership implicit.
+>
+> TODO Define the prerequisite sources and harness-specific checks, plus the setup marker's path and format, in the Initiate spec.
 >
 > TODO Identify the test repository and sample mission for the pilot and end-to-end example.

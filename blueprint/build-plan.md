@@ -4,7 +4,7 @@
 
 - [ ] 15. **Initiate target repository** — Before investigation, install and verify missing prerequisites (Graphify, Grill Me, and thermonuclear code quality review), record successful setup in a repository marker, and skip setup on later missions when prerequisites are available.
 
-- [ ] 1. **Investigator skill** — Turn a mission into a read-only investigation brief with code references, verified findings, assumptions, and open questions.
+- [x] 1. **Investigator skill** — Turn a mission into a read-only investigation brief with code references, verified findings, assumptions, and open questions.
 - [ ] 2. **Planner skill and approval handoff** — Give a fresh planner the mission and brief so it can produce a plan with acceptance criteria and tests for human approval.
 - [ ] 3. **Harness setup and first pilot** — Document how to load the shared skills in Pi, OpenCode, Claude Code, and Codex, then verify first-time initiation, repeat entry, and the handoff in two fresh Pi sessions on the OpenHands builder.
 

@@ -1,5 +1,5 @@
 ---
-name: investigator
+name: workflow-investigate
 description: Investigate a mission in a read-only target repository and return an evidence-backed brief for a fresh planner.
 ---
 

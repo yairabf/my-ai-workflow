@@ -1,6 +1,6 @@
 # My AI Workflow - Project Overview
 
-<!-- blueprint:source-hash be6415773456e0a920c68345383b8a5138cf5ab175611c4057241bd87bf4be1d -->
+<!-- blueprint:source-hash 2aedb24aba9304baeab0058ced833b3c2d749cb0068211bc09acf9a54ad94f73 -->
 
 > A reusable development workflow and skills pack for Pi, OpenCode, Claude Code, and Codex.
 
@@ -17,7 +17,7 @@ Switching repositories or agent harnesses means moving skills and rewriting prom
 ## Usage model
 
 - Pilot with one operator, one test repository, and one mission at a time. Keep the builder on a local or private network.
-- The operator runs Initiate with authorized write access before the first investigation. Reuse working installations and record completion only after the selected harness can use Graphify, Grill Me, and thermonuclear code quality review. With a valid marker and all prerequisites available, start investigation directly. If a marked checkout is missing a prerequisite, report what needs repair.
+- The operator runs Initiate with authorized write access before the first investigation. Reuse working installations and record readiness per harness after it can use all six prerequisites in the [preparation checklist](../../engineering-workflows/.agents/skills/workflow-initiate/references/preparation.md). With a valid marker and all prerequisites available, start investigation directly. If a marked checkout is missing a prerequisite, report what needs repair.
 - Start roles in fresh sessions with explicit handoff files. Investigation and review have read-only access. Implementation can write to its dedicated worktree.
 - Require human approval of the plan before coding. Pause for a decision when missing information would change scope or acceptance criteria.
 - Review the exact candidate commit against the original mission, approved plan, code, and test evidence. Keep the coder's chat and self-assessment out of the review handoff.
@@ -72,7 +72,7 @@ The review verdict applies to its recorded SHA. Store reusable workflow definiti
 ## Tech stack
 
 - Versioned Markdown and Git for workflow documentation, templates, and examples.
-- Canonical role `SKILL.md` files under `.agents/skills/` with templates in each skill's `references/` directory. Pi, OpenCode, and Codex use the shared skills. Claude Code uses generated or installed copies under `.claude/skills/`.
+- The Engineering Workflows pack lives under `engineering-workflows/`, with canonical role skills under its `.agents/skills/` and templates in each skill's `references/`. Its installer registers the shared skills in the target checkout for Pi, OpenCode, and Codex, and installs adapters under the target's `.claude/skills/`.
 - Pi through OpenHands in Docker on the Windows builder for the first pilot.
 - GitHub branches, PRs, and GitHub Actions in the target repository. A future controller provides the common mission interface used by MCP, bots, and intake adapters.
 
@@ -92,6 +92,6 @@ Distribute the pack through a private GitHub repository. Target projects adopt a
 
 > TODO Assign the canonical workflow document and reusable templates to build-plan items. The project plan names them as MVP deliverables and the build plan leaves their ownership implicit.
 >
-> TODO Define the prerequisite sources and harness-specific checks, plus the setup marker's path and format, in the Initiate spec.
+The [Initiate readiness reference](../../engineering-workflows/.agents/skills/workflow-initiate/references/readiness.md) documents the checkout marker and harness-specific checks.
 >
 > TODO Identify the test repository and sample mission for the pilot and end-to-end example.

@@ -1,0 +1,53 @@
+[
+  {
+    "id": "graphify",
+    "source": "graphifyy",
+    "requiredFiles": ["references/query.md", "references/extraction-spec.md"]
+  },
+  {
+    "id": "grill-me",
+    "requiredFiles": []
+  },
+  {
+    "id": "grilling",
+    "requiredFiles": []
+  },
+  {
+    "id": "thermo-nuclear-code-quality-review",
+    "repository": "cursor/plugins",
+    "revision": "50b3a3234bf2e0293849a48784d72030948e44ee",
+    "directory": "thermos/skills/thermo-nuclear-code-quality-review",
+    "notices": ["thermos/LICENSE"],
+    "requiredFiles": []
+  },
+  {
+    "id": "design-taste-frontend",
+    "repository": "Leonxlnx/taste-skill",
+    "revision": "f6b76575f949707b4e3c37cd86cb44b0b98643e8",
+    "directory": "skills/taste-skill",
+    "notices": ["LICENSE"],
+    "requiredFiles": ["assets/starter.html", "scripts/consistency.mjs", "references/system.md"]
+  },
+  {
+    "id": "impeccable",
+    "repository": "pbakaus/impeccable",
+    "revision": "b49177d32788f2dc585c42831d845dacf1ebed2c",
+    "perHarness": true,
+    "notices": ["LICENSE", "NOTICE.md"],
+    "requiredFiles": ["scripts/command-metadata.json", "scripts/impeccable"]
+  },
+  {
+    "id": "ui-ux-pro-max",
+    "repository": "nextlevelbuilder/ui-ux-pro-max-skill",
+    "revision": "2de1134dc4d1cfe112934611ae5803ae17a1bd7e",
+    "directory": ".claude/skills/ui-ux-pro-max",
+    "notices": ["LICENSE"],
+    "requiredFiles": ["scripts/search.py", "scripts/core.py", "data/ux-guidelines.csv"],
+    "searchScripts": {
+      "search.py": "6b52ebb01480058cab145d3c2cb57880a529e522c0781cf8cd873fa55c9b9f1d",
+      "core.py": "caf92bdcf2579c9a7d6af4f53c54ee9d3c8f05472cfab77aaec38bef120ec63e",
+      "design_system.py": "043ed3f404214869ffbf4c8d529afc6c6ceddb211fa4726d67d7a03edf7265db",
+      "reasoning_contract.py": "b8bac1af82aa280d3e06f00aabaeac4337e632996b07fed874e2b6ee6e9c5913"
+    }
+  }
+]

@@ -30,7 +30,7 @@ function git(directory, ...args) {
   }).trimEnd()
 }
 
-function stat(path) {
+export function stat(path) {
   try {
     return lstatSync(path)
   } catch (error) {
@@ -52,7 +52,7 @@ function sameTree(left, right) {
     names.every((name) => sameTree(join(left, name), join(right, name)))
 }
 
-function targetPath(target, relative) {
+export function targetPath(target, relative) {
   let path = target
   for (const part of relative.split('/')) {
     path = join(path, part)
@@ -64,7 +64,7 @@ function targetPath(target, relative) {
   return path
 }
 
-function checkWritableParent(destination) {
+export function checkWritableParent(destination) {
   let parent = dirname(destination)
   while (!stat(parent)) parent = dirname(parent)
   try {
@@ -75,7 +75,7 @@ function checkWritableParent(destination) {
   }
 }
 
-function register(from, to) {
+export function register(from, to) {
   const parent = dirname(to)
   mkdirSync(parent, { recursive: true })
   const stage = mkdtempSync(join(parent, '.workflow-install-'))
@@ -89,12 +89,23 @@ function register(from, to) {
   }
 }
 
-function install(target) {
+function checkoutRevision() {
   const revision = git(source, 'rev-parse', 'HEAD')
   const changes = git(source, 'status', '--porcelain', '--untracked-files=all', '--ignored=matching',
     '--', 'engineering-workflows', ...prerequisites)
   if (changes) throw new Error('Run the installer from a clean checkout of the chosen pack revision.')
+  return revision
+}
 
+export function install(target, revision = checkoutRevision()) {
+  const destination = targetPath(target, '.engineering-workflows')
+  const stamp = join(destination, 'revision.txt')
+  if (stat(stamp)?.isFile()) {
+    const previous = readFileSync(stamp, 'utf8').trim()
+    if (/^[a-f0-9]{40}$/.test(previous) && previous !== revision) {
+      throw new Error(`A different workflow pack revision is installed at ${stamp} (${previous}).`)
+    }
+  }
   const resources = mkdtempSync(join(tmpdir(), 'engineering-workflows-'))
   try {
     const bundled = join(resources, 'prerequisites')
@@ -108,7 +119,7 @@ function install(target) {
       const path = `${root}/${role}`
       return [join(pack, path), targetPath(target, path)]
     }))
-    copies.push([resources, targetPath(target, '.engineering-workflows')])
+    copies.push([resources, destination])
 
     const missing = copies.filter(([from, to]) => {
       if (!stat(to)) return true
@@ -125,21 +136,25 @@ function install(target) {
   }
 }
 
-try {
-  if (process.argv.length !== 3) {
-    throw new Error('Usage: node engineering-workflows/install.mjs <target-git-root>')
-  }
-  const requested = resolve(process.argv[2])
-  let target
+export function checkoutRoot(directory) {
+  const requested = resolve(directory)
   try {
-    target = realpathSync(git(requested, 'rev-parse', '--show-toplevel'))
+    const target = realpathSync(git(requested, 'rev-parse', '--show-toplevel'))
     if (target !== realpathSync(requested)) throw new Error('Expected the Git root.')
+    return target
   } catch {
     throw new Error(`Use the root of an accessible Git worktree: ${requested}`)
   }
-  install(target)
-} catch (error) {
-  const diagnostic = error.stderr?.trim() || error.message
-  console.error(`Engineering Workflows: ${diagnostic}`)
-  process.exitCode = 1
+}
+
+if (process.argv[1] && stat(process.argv[1]) && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  try {
+    if (process.argv.length !== 3) {
+      throw new Error('Usage: node engineering-workflows/install.mjs <target-git-root>')
+    }
+    install(checkoutRoot(process.argv[2]))
+  } catch (error) {
+    console.error(`Engineering Workflows: ${error.message}`)
+    process.exitCode = 1
+  }
 }

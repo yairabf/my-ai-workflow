@@ -1,0 +1,17 @@
+{
+  "name": "engineering-workflows",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Install Engineering Workflows in a Git project",
+  "bin": {
+    "engineering-workflows": "engineering-workflows/setup.mjs"
+  },
+  "files": [
+    "engineering-workflows/",
+    ".agents/skills/grill-me/",
+    ".agents/skills/grilling/"
+  ],
+  "engines": {
+    "node": ">=22"
+  }
+}

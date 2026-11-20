@@ -1,9 +1,9 @@
 # Development workflow
 
-1. Start [`workflow-initiate`](../.agents/skills/workflow-initiate/SKILL.md) with
-   the target checkout path and the harness you will use. Authorize setup
-   writes when prerequisites need installation. Initiate reports whether the
-   selected harness is ready and what to repair if a check fails.
+1. Follow the [one-command setup](../README.md) from the target checkout.
+   If your selected harness reports pending, use
+   [`workflow-initiate`](../.agents/skills/workflow-initiate/SKILL.md) to verify
+   its installed skills in its first session.
 2. Once ready, start [`workflow-investigate`](../.agents/skills/workflow-investigate/SKILL.md)
    in a fresh session with read-only target access. Give it the target
    reference, goal, and any acceptance criteria or source reference.

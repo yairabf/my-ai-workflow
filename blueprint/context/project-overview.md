@@ -1,6 +1,6 @@
 # My AI Workflow - Project Overview
 
-<!-- blueprint:source-hash 2aedb24aba9304baeab0058ced833b3c2d749cb0068211bc09acf9a54ad94f73 -->
+<!-- blueprint:source-hash 2096799ce13d1e4d4baefec2b50e147f7b736990612c653bd7aedb0d1f45f258 -->
 
 > A reusable development workflow and skills pack for Pi, OpenCode, Claude Code, and Codex.
 
@@ -22,7 +22,7 @@ Switching repositories or agent harnesses means moving skills and rewriting prom
 - Require human approval of the plan before coding. Pause for a decision when missing information would change scope or acceptance criteria.
 - Review the exact candidate commit against the original mission, approved plan, code, and test evidence. Keep the coder's chat and self-assessment out of the review handoff.
 - Return blocking findings to the coder. Review each revised commit in a fresh session and pause for human input after two unsuccessful repair attempts. A passing review leads to a PR and target-repository CI. A human decides whether to merge.
-- Keep the first release manual. The versioned installer for repeatable updates, controller, MCP server, bot and Trello connectors, and custom dashboard are follow-up work.
+- Keep the first release manual. Follow-up installation work first provides one pinned setup command for both workflow roles and all six prerequisites, then adds safe upgrades that preserve local edits. The controller, MCP server, intake connectors, and dashboard are also follow-up work.
 
 ## Features
 
@@ -45,6 +45,8 @@ Switching repositories or agent harnesses means moving skills and rewriting prom
 ### After the MVP
 
 9. **Versioned skill installer** - Install or update pinned skills while preserving local edits.
+   - **9a. One-command setup** - Install Initiate, Investigator, and all six prerequisites in a target Git project with one pinned command. Reuse working installations and report repair needs.
+   - **9b. Safe upgrades** - Update to another pinned pack revision while preserving local edits.
 10. **Mission controller** - Track mission state and automate handoffs, approvals, bounded retries, and restart recovery.
 11. **OpenHands execution adapter** - Start separate builder sessions with role-specific workspace access and capture stage outputs.
 12. **MCP mission interface** - Accept mission submissions and status queries from external clients.

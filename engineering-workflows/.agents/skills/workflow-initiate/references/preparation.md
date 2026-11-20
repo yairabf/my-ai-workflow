@@ -19,14 +19,14 @@ Register the source directory under the skill ID in the applicable roots.
 Carry its bundled assets, references, scripts, and applicable upstream license
 notices. Preserve the layout expected by the instructions.
 
-| Prerequisite | Skill ID | Source |
-| --- | --- | --- |
-| Graphify | `graphify` | The [official graphifyy CLI package](https://pypi.org/project/graphifyy/#install). Stage the generic project skill as described below. |
-| Grill Me | `grill-me` and `grilling` | `.engineering-workflows/prerequisites/grill-me/` and its sibling `grilling/` in the target project, supplied by the pack installer. Register both as siblings in each applicable skill root. If these resources are missing, repair the pack installation before registering either skill. |
-| Thermonuclear code quality review | `thermo-nuclear-code-quality-review` | `cursor/plugins` at `50b3a3234bf2e0293849a48784d72030948e44ee`, `thermos/skills/thermo-nuclear-code-quality-review/`. |
-| Taste | `design-taste-frontend` | `Leonxlnx/taste-skill` at `f6b76575f949707b4e3c37cd86cb44b0b98643e8`, `skills/taste-skill/`. |
-| Impeccable | `impeccable` | `pbakaus/impeccable` at `b49177d32788f2dc585c42831d845dacf1ebed2c`, using the corresponding skill directory under each of the four roots above. |
-| UI UX Pro Max | `ui-ux-pro-max` | `nextlevelbuilder/ui-ux-pro-max-skill` at `2de1134dc4d1cfe112934611ae5803ae17a1bd7e`, `.claude/skills/ui-ux-pro-max/`. The search scripts use Python 3. |
+Use the [prerequisite manifest](prerequisites.json) for the skill IDs, exact
+Git revisions, source paths, and resource checks shared with the setup CLI.
+Graphify comes from the [official graphifyy CLI package](https://pypi.org/project/graphifyy/#install).
+Grill Me and its Grilling companion are supplied in the target's
+`.engineering-workflows/prerequisites/` directory. Register them as
+siblings. Repair the pack installation if either source directory is absent.
+Impeccable uses the corresponding source directory for each of the four
+harnesses. UI UX Pro Max uses Python 3.
 
 ## Stage and register missing skills
 
@@ -37,7 +37,7 @@ notices. Preserve the layout expected by the instructions.
    so the operator can repair it.
 2. Fetch missing pinned Git sources in temporary staging directories. For
    example, with `source_dir`, `repository`, `revision`, and `source_path`
-   set from the table, run these commands in order and stop that source on
+   set from the manifest, run these commands in order and stop that source on
    any nonzero exit. Supply all missing skill directories as separate
    arguments to `sparse-checkout set` when using the same source checkout.
 

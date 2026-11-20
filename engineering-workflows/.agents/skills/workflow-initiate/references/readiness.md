@@ -72,8 +72,9 @@ node .agents/skills/workflow-initiate/scripts/marker.mjs record "$PWD" opencode 
 
 The helper merges those entries with prior verification and atomically
 replaces the JSON marker. A successful response lists recorded harnesses.
-Use an explicit setup run with a newly available harness selected to verify
-and record it. If a previously verified harness needs repair, its retained
+Use the same checks in the first session of a newly available harness and
+record it once they pass. The CLI prepares its registrations during initial
+setup. If a previously verified harness needs repair, its retained
 entry records historical verification while its current status remains
 unready. Report the failed check and repeat it after repair.
 

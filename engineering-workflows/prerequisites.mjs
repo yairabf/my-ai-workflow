@@ -1,7 +1,7 @@
 import { spawnSync } from 'node:child_process'
-import { accessSync, constants, copyFileSync, cpSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { accessSync, constants, copyFileSync, cpSync, mkdtempSync, readFileSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { basename, dirname, join } from 'node:path'
+import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path'
 import { checkWritableParent, register, stat, targetPath } from './install.mjs'
 
 const manifest = new URL('.agents/skills/workflow-initiate/references/prerequisites.json', import.meta.url)
@@ -39,9 +39,8 @@ export function checkSkill(directory, skill) {
       accessSync(path, constants.R_OK)
     }
     if (skill.id === 'grill-me') {
-      const companion = join(directory, '../grilling/SKILL.md')
-      if (!stat(companion)?.isFile()) throw new Error(`Missing companion ${companion}`)
-      accessSync(companion, constants.R_OK)
+      const companion = join(dirname(realpathSync(directory)), 'grilling')
+      checkSkill(companion, { id: 'grilling', requiredFiles: [] })
     }
   } catch (error) {
     if (error.code === 'ENOENT' || error.code === 'EACCES' || error.code === 'EPERM') {
@@ -132,6 +131,30 @@ function stageRegistration(skill, stage, root, target) {
   return staged
 }
 
+function installedDirectory(target, path, existing) {
+  if (existing.isDirectory()) return path
+  if (!existing.isSymbolicLink()) throw new Error(`Expected a directory at ${path}`)
+
+  let resolved
+  try {
+    resolved = realpathSync(path)
+  } catch (error) {
+    if (['ENOENT', 'ENOTDIR', 'ELOOP', 'EACCES', 'EPERM'].includes(error.code)) {
+      throw new Error(`Cannot resolve prerequisite link at ${path}`)
+    }
+    throw error
+  }
+
+  const location = relative(target, resolved)
+  if (location === '..' || location.startsWith(`..${sep}`) || isAbsolute(location)) {
+    throw new Error(`Prerequisite link points outside the checkout at ${path}`)
+  }
+  if (!stat(resolved)?.isDirectory()) {
+    throw new Error(`Prerequisite link does not point to a directory at ${path}`)
+  }
+  return resolved
+}
+
 export function preparePrerequisites(target, discovery) {
   const failures = []
   // Install the companion first so Grill Me can resolve it as soon as it is registered.
@@ -140,8 +163,10 @@ export function preparePrerequisites(target, discovery) {
     const missing = []
     for (const destination of destinations(skill)) {
       try {
-        const path = targetPath(target, `${destination.root}/${skill.id}`)
-        if (stat(path)) checkSkill(path, skill)
+        const parent = targetPath(target, destination.root)
+        const path = join(parent, skill.id)
+        const existing = stat(path)
+        if (existing) checkSkill(installedDirectory(target, path, existing), skill)
         else if (!discoveredWorking(skill, destination.harnesses, discovery)) {
           checkWritableParent(path)
           missing.push({ ...destination, path })

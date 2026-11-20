@@ -11,9 +11,11 @@ function pinnedRevision() {
   const requested = packages?.['']?.dependencies?.['engineering-workflows']
   const entry = Object.entries(packages ?? {}).find(([path]) =>
     path === 'node_modules/engineering-workflows' || path.endsWith('/node_modules/engineering-workflows'))
-  const commit = /^git\+[^#]+#([a-f0-9]{40})$/
-  const revision = commit.exec(entry?.[1]?.resolved)?.[1]
-  if (!revision || revision !== commit.exec(requested)?.[1]) {
+  const gitCommit = /^git\+[^#]+#([a-f0-9]{40})$/
+  const githubCommit = /^github:[\w.-]+\/[\w.-]+#([a-f0-9]{40})$/
+  const revision = gitCommit.exec(entry?.[1]?.resolved)?.[1]
+  const requestedRevision = gitCommit.exec(requested)?.[1] ?? githubCommit.exec(requested)?.[1]
+  if (!revision || revision !== requestedRevision) {
     throw new Error('Run setup with a full Git commit pin for the Engineering Workflows package.')
   }
   return revision

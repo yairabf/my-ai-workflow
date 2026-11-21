@@ -21,7 +21,7 @@
 - [ ] 9. **Versioned skill installer** — Install or update a pinned version of the shared skills in a target repo while preserving local edits.
   - [x] 9a. **One-command setup** — From a target Git project, run one version-pinned command that installs Initiate, Investigator, and all six prerequisites, reuses working installations, and reports anything that needs repair.
   - [ ] 9b. **Safe upgrades** — Update the installed pack to another pinned version while preserving local edits.
-  - [x] 9c. **Private package release** — Publish a versioned Engineering Workflows package to GitHub Packages and verify the short npm setup command in a fresh Git project.
+  - [ ] 9c. **Private package release** — Publish a versioned Engineering Workflows package to GitHub Packages and verify the short npm setup command in a fresh Git project.
 - [ ] 10. **Mission controller** — Record mission state and automate role handoffs, plan approvals, bounded retries, and recovery after restarts.
 - [ ] 11. **OpenHands execution adapter** — Start separate agent sessions on the builder, apply role-specific workspace access, and capture each stage’s output.
 - [ ] 12. **MCP mission interface** — Let external clients submit missions and check their status through a common interface.

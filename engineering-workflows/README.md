@@ -1,25 +1,13 @@
 # Engineering Workflows
 
-## Private package
+## Private package release pending
 
-Configure npm once on each machine. Use your GitHub username and a classic
-personal access token with `read:packages` and read access to the package. Enter
-the token at the password prompt.
+The first release installed successfully from GitHub Packages, but GitHub
+listed it publicly despite the restricted publish request. The release workflow
+is disabled while private distribution is resolved. Use the GitHub
+commit-pinned setup below in the meantime.
 
-```sh
-npm login --scope=@yairabf --registry=https://npm.pkg.github.com --auth-type=legacy
-```
-
-From the target Git root, use the published version:
-
-```sh
-npx @yairabf/ew@1.0.0 setup
-```
-
-Maintainers can dispatch **Private package release** from the repository's
-Actions tab on `main`. The workflow packs and inspects the exact source
-commit, publishes privately, and tests the registry command in a fresh Git
-project. An existing version is reused only when it records the same commit.
+[Release run and visibility check](https://github.com/yairabf/my-ai-workflow/actions/runs/44926621910)
 
 ## GitHub commit-pinned setup
 

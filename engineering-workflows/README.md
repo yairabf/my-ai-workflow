@@ -1,5 +1,28 @@
 # Engineering Workflows
 
+## Private package
+
+Configure npm once on each machine. Use your GitHub username and a classic
+personal access token with `read:packages` and read access to the package. Enter
+the token at the password prompt.
+
+```sh
+npm login --scope=@yairabf --registry=https://npm.pkg.github.com --auth-type=legacy
+```
+
+From the target Git root, use the published version:
+
+```sh
+npx @yairabf/ew@1.0.0 setup
+```
+
+Maintainers can dispatch **Private package release** from the repository's
+Actions tab on `main`. The workflow packs and inspects the exact source
+commit, publishes privately, and tests the registry command in a fresh Git
+project. An existing version is reused only when it records the same commit.
+
+## GitHub commit-pinned setup
+
 Run setup from the root of the Git project you want to prepare. Replace
 `<commit>` with the full commit SHA of a published revision that includes this
 installer. Use Git, Node.js 22 or newer, npm 12 or newer, Python 3, and your

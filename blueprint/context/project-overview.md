@@ -1,6 +1,6 @@
 # My AI Workflow - Project Overview
 
-<!-- blueprint:source-hash 2096799ce13d1e4d4baefec2b50e147f7b736990612c653bd7aedb0d1f45f258 -->
+<!-- blueprint:source-hash 413c8675eb095389d299d1e364c63de7bd9e034bc1572540d5861bfd4b48154a -->
 
 > A reusable development workflow and skills pack for Pi, OpenCode, Claude Code, and Codex.
 
@@ -47,6 +47,7 @@ Switching repositories or agent harnesses means moving skills and rewriting prom
 9. **Versioned skill installer** - Install or update pinned skills while preserving local edits.
    - **9a. One-command setup** - Install Initiate, Investigator, and all six prerequisites in a target Git project with one pinned command. Reuse working installations and report repair needs.
    - **9b. Safe upgrades** - Update to another pinned pack revision while preserving local edits.
+   - **9c. Private package release** - Publish the versioned pack to GitHub Packages and verify the short npm setup command in a fresh Git project.
 10. **Mission controller** - Track mission state and automate handoffs, approvals, bounded retries, and restart recovery.
 11. **OpenHands execution adapter** - Start separate builder sessions with role-specific workspace access and capture stage outputs.
 12. **MCP mission interface** - Accept mission submissions and status queries from external clients.
@@ -88,7 +89,7 @@ Use the harness's existing interface and GitHub. The README guides the operator 
 
 ## Deployment
 
-Distribute the pack through a private GitHub repository. Target projects adopt a pinned tag or commit. The pack requires no build or start command, database, worker, environment variables, health endpoint, or domain. The pilot uses the existing Windows Docker builder. The target repository owns its build, CI, and deployment configuration.
+Distribute the pack through pinned GitHub source commits and private versioned GitHub Packages releases. The registry command requires authenticated read access. Each package retains its exact source revision. The pack requires no build or start command, database, worker, environment variables, health endpoint, or domain. The pilot uses the existing Windows Docker builder. The target repository owns its build, CI, and deployment configuration.
 
 ## Open questions
 

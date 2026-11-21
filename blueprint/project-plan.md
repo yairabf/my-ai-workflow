@@ -59,7 +59,7 @@ The MVP uses the harness’s existing interface and GitHub. A future bot can sur
 
 ## 8. Deployment - Where and how will this ship?
 
-The workflow pack ships as a private GitHub repo. Projects can adopt a specific Git tag or commit so workflow updates are deliberate and reproducible.
+Projects can install the workflow pack from a pinned GitHub commit. A versioned release on GitHub Packages provides the short npm setup command for authenticated users. Publish that package with private visibility and preserve its exact source revision.
 
 The pack itself has no build command, start command, database, worker, environment variables, health endpoint, or domain. The first pilot runs on the existing Windows machine with OpenHands in Docker and Pi configured in that runtime. The target repo supplies its own build commands, CI, and deployment configuration.
 

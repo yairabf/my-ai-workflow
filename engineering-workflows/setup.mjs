@@ -21,6 +21,22 @@ function pinnedRevision() {
   return revision
 }
 
+function sourceRevision() {
+  const manifest = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'))
+  if (manifest.name === 'engineering-workflows' && manifest.engineeringWorkflowsRelease === undefined) {
+    return pinnedRevision()
+  }
+  const { version } = manifest
+  const commit = manifest.engineeringWorkflowsRelease?.sourceCommit
+  if (manifest.name !== '@yairabf/ew' || typeof version !== 'string' || !/^\d+\.\d+\.\d+$/.test(version) ||
+      manifest.publishConfig?.registry !== 'https://npm.pkg.github.com' ||
+      manifest.publishConfig?.access !== 'restricted' ||
+      typeof commit !== 'string' || !/^[a-f0-9]{40}$/.test(commit)) {
+    throw new Error('The Engineering Workflows package release metadata is invalid. Reinstall the pinned release.')
+  }
+  return commit
+}
+
 const usage = 'Usage: engineering-workflows setup'
 try {
   const args = process.argv.slice(2)
@@ -28,7 +44,7 @@ try {
     console.log(usage)
   } else if (args.length === 1 && args[0] === 'setup') {
     const target = checkoutRoot(process.cwd())
-    install(target, pinnedRevision())
+    install(target, sourceRevision())
     const failures = preparePrerequisites(target, await discover(target))
     if (reportReadiness(target, await discover(target), failures)) process.exitCode = 1
   } else {

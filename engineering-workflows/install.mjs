@@ -85,6 +85,7 @@ export function register(from, to) {
     cpSync(from, staged, { recursive: true })
     if (stat(to)) throw new Error(`Destination appeared during installation: ${to}`)
     if (stat(staged).isFile()) {
+      // A hard link publishes the complete file without replacing an existing destination.  
       linkSync(staged, to)
     } else {
       renameSync(staged, to)

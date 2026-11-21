@@ -29,8 +29,10 @@ step and leave its readiness unverified.
 | Claude Code | In a fresh Claude Code session, use the skill list or slash-command completion. Confirm each project definition is available, including explicit-only commands. |
 | Codex | In a fresh Codex session, check `/skills` for enabled entries and their locations. A client using the Codex app-server protocol can query `skills/list` for the target working directory. |
 
-Check every ID in the [preparation checklist](preparation.md), including
-Grill Me's companion `grilling`. Use the path the harness discovered, read
+Check `workflow-initiate`, `workflow-investigate`, and `workflow-plan`, plus
+every skill in the [preparation checklist](preparation.md), including Grill Me's
+companion `grilling`. For `workflow-plan`, confirm the shared definition can
+read `references/implementation-plan.md`. Use the path the harness discovered, read
 the definition and confirm it has the necessary resources. When a harness
 offers a read-only skill-loading interface, use it to confirm it can read the
 definition. With a completion-only interface, confirm that the discovered

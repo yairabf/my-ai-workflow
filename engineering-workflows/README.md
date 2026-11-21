@@ -48,7 +48,7 @@ install its CLI with `uv` or `pipx`.
 npx --yes --allow-git=root --package='git+ssh://git@github.com/yairabf/my-ai-workflow.git#<commit>' -- engineering-workflows setup
 ```
 
-Setup registers `workflow-initiate` and `workflow-investigate` and prepares
+Setup registers `workflow-initiate`, `workflow-investigate`, and `workflow-plan` and prepares
 Graphify, Grill Me, thermonuclear code quality review, Taste, Impeccable, and UI UX
 Pro Max for Pi, OpenCode, Claude Code, and Codex. It stores the source commit
 in `.engineering-workflows/revision.txt`. The npm Git flag applies only to
@@ -69,4 +69,5 @@ agent configuration, and the Git index in place.
 
 The original role-only installer is available from a clean workflow-pack
 checkout with `node engineering-workflows/install.mjs /absolute/path/to/target-repository`.
-See the [development workflow](workflows/development.md) for the handoff.
+Use the [development workflow](workflows/development.md) to pass the Investigator's
+brief to a fresh Planner and record human approval before handing off the plan.

@@ -7,11 +7,50 @@
 2. Once ready, start [`workflow-investigate`](../.agents/skills/workflow-investigate/SKILL.md)
    in a fresh session with read-only target access. Give it the target
    reference, goal, and any acceptance criteria or source reference.
-3. Take the returned investigation brief and original mission to a fresh
-   planning session.
+3. Start [`workflow-plan`](../.agents/skills/workflow-plan/SKILL.md) in a fresh
+   session with the original mission and the returned investigation brief. If
+   the Planner asks for clarification, supply the missing information before
+   reviewing a plan.
+4. Review the Markdown plan with its decision set to `Pending`. After the human
+   explicitly approves that revision, record `Approved` in its approval section
+   and give that file to the developer in a fresh session. Keep approval pending
+   while requests for changes or clarification are open. If the plan changes
+   materially, reset the decision to `Pending` and ask for approval again.
 
 On later missions, Initiate skips setup when the recorded harness passes
 its quick check.
+
+## Planner handoff example
+
+This example assumes a target checkout where `cli.mjs` defines help text and
+the investigation brief identifies `node cli.mjs --help` as the check.
+
+```markdown
+# Implementation plan
+
+## Mission and evidence
+
+- **Mission:** `mission.md` requests documenting the output directory in CLI help.
+- **Investigation brief:** `investigation-brief.md` identifies `cli.mjs` as the
+  help text source and records that `--help` currently omits `--output`.
+
+## Planned changes
+
+1. Add the existing `--output <directory>` option to the help text in `cli.mjs`.
+
+## Acceptance criteria
+
+1. CLI help lists `--output <directory>` and describes the destination.
+
+## Verification
+
+- For criterion 1, run `node cli.mjs --help` and confirm that the option and
+  description are present.
+
+## Human approval
+
+**Decision:** Pending
+```
 
 ## Deliver a reviewed change to GitHub
 

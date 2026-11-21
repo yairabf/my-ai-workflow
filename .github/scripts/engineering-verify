@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+git diff --check "${EW_VERIFY_BASE:-HEAD}" --
+find engineering-workflows -type f -name '*.mjs' -exec bash -c '
+  set -e
+  for helper do
+    node --check "$helper"
+  done
+' bash {} +

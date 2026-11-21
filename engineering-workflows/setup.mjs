@@ -44,7 +44,8 @@ try {
     console.log(usage)
   } else if (args.length === 1 && args[0] === 'setup') {
     const target = checkoutRoot(process.cwd())
-    install(target, sourceRevision())
+    install(target, sourceRevision(), { githubCi: true })
+    console.log('GitHub CI workflow: .github/workflows/engineering-workflows.yml')
     const failures = preparePrerequisites(target, await discover(target))
     if (reportReadiness(target, await discover(target), failures)) process.exitCode = 1
   } else {

@@ -83,9 +83,11 @@ explicit-only `autopilot` and `continuous`.
 
 ## Commands
 
-- Review whitespace in tracked changes with `git diff --check HEAD`.
-- Check a JavaScript helper's syntax with `node --check path/to/helper.mjs`.
+- Verify: `bash .github/scripts/engineering-verify` from the repository root.
+  It checks Git whitespace and the syntax of Engineering Workflows JavaScript helpers.
+  Set `EW_VERIFY_BASE` to a base commit to also check committed changes against it.
+- Check an individual helper with `node --check path/to/helper.mjs`.
 
-There are no dev, build, lint, test, or Verify commands configured. There is no
-required automated test gate. Review changed workflow instructions against the
-files and commands they reference, and exercise changed helpers locally.
+There are no dev, build, lint, or test commands configured. Review changed
+workflow instructions against the files and commands they reference, and
+exercise changed helpers locally.

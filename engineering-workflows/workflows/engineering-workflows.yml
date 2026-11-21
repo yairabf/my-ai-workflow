@@ -1,0 +1,90 @@
+name: Engineering Workflows
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, ready_for_review]
+  pull_request_target:
+    types: [opened, reopened, synchronize, ready_for_review]
+
+permissions: {}
+
+concurrency:
+  group: engineering-workflows-${{ github.event_name }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: ${{ vars.EW_VERIFY == 'enabled' && 'Verify' || 'Verify (project CI or setup required)' }}
+    if: github.event_name == 'pull_request' && vars.EW_VERIFY == 'enabled'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.0.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Run the project Verify recipe
+        env:
+          EW_VERIFY_BASE: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if [ ! -f .github/scripts/engineering-verify ]; then
+            echo '::error::EW_VERIFY is enabled. Add the project recipe at .github/scripts/engineering-verify.'
+            exit 1
+          fi
+          bash .github/scripts/engineering-verify
+
+  review:
+    name: OpenCodeReview (advisory)
+    if: >-
+      github.event_name == 'pull_request_target' &&
+      github.event.pull_request.draft == false &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Check review configuration
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          OCR_LLM_URL: ${{ secrets.OCR_LLM_URL }}
+          OCR_LLM_AUTH_TOKEN: ${{ secrets.OCR_LLM_AUTH_TOKEN }}
+          OCR_LLM_MODEL: ${{ vars.OCR_LLM_MODEL }}
+          OCR_LLM_PROTOCOL: ${{ vars.OCR_LLM_PROTOCOL }}
+        run: |
+          printf 'PR #%s, head `%s`\n' "$PR_NUMBER" "$PR_HEAD" >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "$OCR_LLM_URL" ] || [ -z "$OCR_LLM_AUTH_TOKEN" ] || [ -z "$OCR_LLM_MODEL" ]; then
+            echo '::error::Configure OpenCodeReview with OCR_LLM_URL and OCR_LLM_AUTH_TOKEN secrets and the OCR_LLM_MODEL variable.'
+            exit 1
+          fi
+          case "$OCR_LLM_PROTOCOL" in
+            openai|openai-responses|anthropic) ;;
+            *)
+              echo '::error::Set the OCR_LLM_PROTOCOL variable to openai, openai-responses, or anthropic.'
+              exit 1
+              ;;
+          esac
+      - name: Review the PR diff
+        id: ocr
+        uses: alibaba/open-code-review@d29ca2044a42ea297a7fa93692d0f5ac8f38d84e # v1.14.0
+        with:
+          ocr_version: '1.14.0'
+          llm_url: ${{ secrets.OCR_LLM_URL }}
+          llm_auth_token: ${{ secrets.OCR_LLM_AUTH_TOKEN }}
+          llm_model: ${{ vars.OCR_LLM_MODEL }}
+          llm_protocol: ${{ vars.OCR_LLM_PROTOCOL }}
+          llm_use_anthropic: 'false'
+          llm_extra_body: '{}'
+          upload_artifacts: 'false'
+      - name: Record the review summary
+        env:
+          OCR_SUMMARY_URL: ${{ steps.ocr.outputs.summary_comment_url }}
+        run: |
+          if [ -z "$OCR_SUMMARY_URL" ]; then
+            echo '::error::OpenCodeReview did not return a posted summary. Inspect the review step.'
+            exit 1
+          fi
+          printf 'OpenCodeReview summary: %s\n' "$OCR_SUMMARY_URL" >> "$GITHUB_STEP_SUMMARY"

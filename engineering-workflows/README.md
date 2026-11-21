@@ -9,6 +9,33 @@ commit-pinned setup below in the meantime.
 
 [Release run and visibility check](https://github.com/yairabf/my-ai-workflow/actions/runs/44926621910)
 
+## GitHub CI
+
+The setup command installs `.github/workflows/engineering-workflows.yml`
+alongside the skills. Commit and push it to the target repository's default
+branch to activate automatic OpenCodeReview on ready PRs from branches in
+that repository. Draft, fork, and Dependabot PRs skip OpenCodeReview.
+Keep the review advisory.
+
+In the target repository's GitHub Actions settings, add the
+`OCR_LLM_URL` and `OCR_LLM_AUTH_TOKEN` secrets for the approved model
+endpoint. Set the `OCR_LLM_MODEL` variable and set `OCR_LLM_PROTOCOL` to
+`openai`, `openai-responses`, or `anthropic` as appropriate for the endpoint.
+The provider receives code as review context. An eligible run with missing
+settings fails with a configuration message. Find completed reviews on the PR
+and in the review job summary.
+
+If the project already runs its verification checks for PRs, use that check.
+To enable the installed workflow's Verify job, create
+`.github/scripts/engineering-verify` in the target repository. Put any
+runner setup and the project's normal Verify command in that Bash recipe,
+document the local invocation from the project root, and set the Actions
+variable `EW_VERIFY` to `enabled`. CI supplies the PR base commit as
+`EW_VERIFY_BASE` for recipes that check the change range. With the variable
+unset, the job is skipped and labeled as needing setup or project-owned CI.
+When enabling merge protection, select the actual Verify check under GitHub's
+required status checks after the job has reported its first result.
+
 ## GitHub commit-pinned setup
 
 Run setup from the root of the Git project you want to prepare. Replace

@@ -3,6 +3,7 @@ import {
   accessSync,
   constants,
   cpSync,
+  linkSync,
   lstatSync,
   mkdirSync,
   mkdtempSync,
@@ -83,7 +84,11 @@ export function register(from, to) {
     const staged = join(stage, 'content')
     cpSync(from, staged, { recursive: true })
     if (stat(to)) throw new Error(`Destination appeared during installation: ${to}`)
-    renameSync(staged, to)
+    if (stat(staged).isFile()) {
+      linkSync(staged, to)
+    } else {
+      renameSync(staged, to)
+    }
   } finally {
     rmSync(stage, { recursive: true, force: true })
   }
@@ -97,7 +102,7 @@ function checkoutRevision() {
   return revision
 }
 
-export function install(target, revision = checkoutRevision()) {
+export function install(target, revision = checkoutRevision(), { githubCi = false } = {}) {
   const destination = targetPath(target, '.engineering-workflows')
   const stamp = join(destination, 'revision.txt')
   if (stat(stamp)?.isFile()) {
@@ -120,6 +125,13 @@ export function install(target, revision = checkoutRevision()) {
       return [join(pack, path), targetPath(target, path)]
     }))
     copies.push([resources, destination])
+    if (githubCi) {
+      const workflow = 'engineering-workflows.yml'
+      copies.push([
+        join(pack, 'workflows', workflow),
+        join(targetPath(target, '.github/workflows'), workflow),
+      ])
+    }
 
     const missing = copies.filter(([from, to]) => {
       if (!stat(to)) return true

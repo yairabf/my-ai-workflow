@@ -20,6 +20,138 @@
 On later missions, Initiate skips setup when the recorded harness passes
 its quick check.
 
+## First Pi pilot
+
+Run this pilot with one operator on the existing Windows builder, using Pi
+through OpenHands in Docker on a local or private network. Run the shell blocks
+in the builder's Bash environment. Use one disposable checkout and keep the
+mission, role outputs, and evidence in a separate directory that the Pi
+sessions can read. Use the builder's existing credential store for setup.
+
+### Prepare the checkout and mission
+
+Run this from a directory writable by the builder. Keep the printed paths for
+the setup session and both role sessions. Git needs a configured author for
+the disposable fixture commit.
+
+```bash
+pilot_dir=$(mktemp -d "$PWD/ew-pilot.XXXXXX")
+mkdir "$pilot_dir/target" "$pilot_dir/handoff"
+cd "$pilot_dir/target"
+git init -q -b main
+cat > cli.mjs <<'EOF'
+import { resolve } from 'node:path'
+import { parseArgs } from 'node:util'
+
+const { values } = parseArgs({
+  options: { help: { type: 'boolean' }, output: { type: 'string' } },
+})
+
+if (values.help) {
+  console.log('Usage: node cli.mjs [--help]')
+} else {
+  console.log(`Output directory: ${resolve(values.output ?? '.')}`)
+}
+EOF
+git add cli.mjs
+git commit -m 'Add pilot CLI fixture'
+
+cat > "$pilot_dir/handoff/mission.md" <<EOF
+# Pilot mission
+
+Target checkout: $PWD
+
+Goal: Document the existing output-directory option in CLI help.
+
+Acceptance criterion: The output of \`node cli.mjs --help\` lists
+\`--output <directory>\` and describes it as the output destination.
+EOF
+printf 'Target: %s\nMission: %s\n' "$PWD" "$pilot_dir/handoff/mission.md"
+git rev-parse HEAD
+node cli.mjs --help
+node cli.mjs --output reports
+```
+
+Help should show only `--help`. The second command should print the resolved
+`reports` directory without creating it. These are the baseline observations
+for the investigation.
+
+### Verify initial readiness and repeat entry
+
+1. In the target, run `test ! -e "$(git rev-parse --git-path ai-workflow-initiate.json)" && printf 'uninitialized\n'`.
+   Capture `uninitialized` before setup. If the marker is present, start with
+   a fresh disposable checkout.
+2. Run the [commit-pinned setup command](../README.md#github-commit-pinned-setup)
+   from the target root with write access. Use a published pack SHA that
+   includes all three roles, and record the SHA and setup outcome. Load
+   `workflow-initiate` in Pi with the target path, harness `pi`, and
+   authorization to prepare that checkout. Follow the
+   [readiness checks](../.agents/skills/workflow-initiate/references/readiness.md)
+   in Pi. Continue once the checks pass and the marker includes `pi`. If any
+   check is pending or requires repair, record the exact step and resolve it
+   before proceeding.
+3. Run the following snapshot from the target root before and after running
+   `workflow-initiate` again for the same checkout and harness.
+   Capture its readiness result and explicit report that setup was skipped.
+   Both snapshots should match, including the marker's inode and timestamps.
+   If the quick check fails, stop before investigation and record the repair
+   reported by Initiate.
+
+   ```bash
+   node .agents/skills/workflow-initiate/scripts/marker.mjs show "$PWD"
+   stat -c 'inode=%i modified=%y changed=%z' "$(git rev-parse --git-path ai-workflow-initiate.json)"
+   git status --porcelain
+   ```
+
+In the Agent Canvas 1.43.0 pilot, Canvas forwarded Pi skill commands as text.
+If this happens, check a fresh Pi RPC session at the target root with
+`get_commands` to verify that Pi discovers the project skills. In Canvas,
+ask Pi to read the installed role definition at
+`.agents/skills/workflow-initiate/SKILL.md` and follow it. Use the corresponding
+installed definition for the Investigator and Planner when needed.
+
+If setup reports that uv's tool directory is missing from `PATH`, get the
+directory with `uv tool dir --bin` and run `graphify --version` by absolute
+path. If that works, prepend the directory to `PATH` in the same shell that
+reruns pinned setup. Check `graphify --version` again in a fresh Pi chat.
+If that chat still cannot resolve it, make the executable available on the
+container's inherited `PATH` before readiness verification.
+
+### Run two fresh Pi role sessions
+
+In both role sessions, expose the target as a read-only bind mount at the same
+container path recorded in `mission.md`. Keep the handoff directory accessible
+at its existing path so each role can read its inputs. Save role outputs as the
+operator outside the target.
+
+With a writable setup container, you can start a second Canvas container on a
+separate localhost port with only the pilot directory mounted read-only at its
+original path. Check that `docker inspect` reports `RW=false` for that mount.
+Use separate runtime state and configure Pi's login and required executables in
+that container. Open the exact target folder as the workspace for both roles.
+
+1. Open a fresh Pi session at the same target path with read-only checkout
+   access. Load `workflow-investigate` with the path to `mission.md`.
+   Copy the returned Markdown into a host editor and save it as
+   `investigation-brief.md` beside the mission. Open the saved file to verify
+   that it contains the brief before starting the Planner.
+   Expect the brief to reference the target revision, cite the help and option
+   handling in `cli.mjs`, report what the read-only commands established, and
+   include assumptions and open questions.
+2. Open a second fresh Pi session with read-only target access. Load
+   `workflow-plan` and pass the paths to `mission.md` and
+   `investigation-brief.md`. Save the returned Markdown as
+   `implementation-plan.md`. Compare it with the [example below](#planner-handoff-example).
+   Expect it to reference both inputs, describe the help-text change, connect
+   acceptance criteria to verification, and set the human decision to
+   `Pending`. End the pilot at the approval handoff.
+
+For review, return the pack and fixture SHAs, the initial readiness result,
+the two repeat-entry snapshots and skip report, and the mission, brief, and
+plan. Identify the two fresh Pi sessions and how checkout write access was
+disabled. Leave credentials out of the evidence. If any stage is blocked,
+include the stage and exact failed or unavailable check.
+
 ## Planner handoff example
 
 This example assumes a target checkout where `cli.mjs` defines help text and

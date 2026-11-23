@@ -59,8 +59,9 @@ this invocation.
 - **Pending.** Setup prepared registrations, but the harness is unavailable or
   a check needs its first interactive session. Use `workflow-initiate` to confirm
   discovery and any reported runtime check when the harness is available.
-- **Repair needed.** Address the reported skill, runtime, or path and rerun the
-  same pinned command.
+- **Repair needed.** Address the reported skill, runtime, or path. Rerun the
+  same pinned command if installation failed, or repeat the readiness check
+  if a previously ready harness failed its quick check.
 
 Repeating installation from the same revision reuses matching files. If an
 installed path differs, the installer names that path and exits. Resolve the
@@ -69,5 +70,27 @@ agent configuration, and the Git index in place.
 
 The original role-only installer is available from a clean workflow-pack
 checkout with `node engineering-workflows/install.mjs /absolute/path/to/target-repository`.
-Use the [development workflow](workflows/development.md) to pass the Investigator's
-brief to a fresh Planner and record human approval before handing off the plan.
+
+## Load the skills in your harness
+
+Open the prepared target checkout in the harness that will run the mission.
+
+| Harness | Find and load project skills |
+| --- | --- |
+| Pi | In a fresh Pi terminal session, use `/skill:` completion and check the startup resources. Invoke a role by name, for example `/skill:workflow-initiate`. The shared roles live under `.agents/skills/`. For Agent Canvas, follow the pilot discovery steps below. |
+| OpenCode | Run `opencode debug skill` from the target root. Check that the mission agent can load the definitions under `.agents/skills/`, then name the role in the session and ask the agent to load it. |
+| Claude Code | In a fresh session, use slash-command completion to find the roles registered under `.claude/skills/`. Invoke the role, for example `/workflow-initiate`. |
+| Codex | In a fresh session, use `/skills` to check that the roles under `.agents/skills/` are enabled. Invoke a role by name, for example `$workflow-initiate`. |
+
+Use the [preparation checklist](.agents/skills/workflow-initiate/references/preparation.md)
+for prerequisite locations, including harness-specific Impeccable builds, and
+the [readiness reference](.agents/skills/workflow-initiate/references/readiness.md)
+for discovery, loading, and runtime checks. If the harness is unavailable,
+leave its readiness pending until you can run those checks in that harness.
+If a recorded harness fails its quick check, repair the reported prerequisite
+before starting the Investigator.
+
+Once the selected harness is ready, start `workflow-investigate` in a fresh
+read-only session. Then start `workflow-plan` in another fresh session with
+the mission and the returned brief. Follow the [sample mission and Pi pilot](workflows/development.md#first-pi-pilot)
+for the inputs, expected outputs, and approval handoff.

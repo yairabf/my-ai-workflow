@@ -215,3 +215,41 @@ the investigation brief identifies `node cli.mjs --help` as the check.
    for its new head. Results from superseded commits do not verify the new one.
    Follow the project's repair limit and report unresolved issues. Hand the
    human the latest SHA, checks, and findings for the merge decision.
+
+## Remote ticket planning
+
+Use the configured Windows Docker builder on its private network. The writer
+(`openhands-canvas`) needs GitHub CLI authentication with repository and issue
+read access, Git, npm 12+, Node 22+, and the pinned installer's prerequisites.
+The reader (`ew-pilot-reader`) needs its own signed-in Pi runtime, Python 3,
+Node, and Graphify or a working uv/pipx installation. On first preparation the
+builder provisions a missing Graphify executable and includes the tool bin
+directory when a fresh process needs it. The launcher recognizes Pi on PATH or a single Pi
+installation in the reader's npm execution cache. For differently named
+containers set `EW_BUILDER_WRITER` and `EW_BUILDER_READER` on the client.
+
+Mount the same builder storage at the same path in both containers. The writer
+can mount a writable parent and the reader a read-only child. The client checks
+Docker's mount metadata before using the `ew-remote` directory under that shared
+path. Keep model and GitHub credentials in their respective runtime stores.
+Run one ticket at a time.
+
+1. From the pack checkout, use the [planning command](../README.md#plan-a-github-ticket-on-the-builder)
+   with a repository and GitHub issue. A new checkout is cloned and prepared.
+   The reader verifies the role catalog and prerequisites before investigation.
+2. Inspect the returned plan's mission, brief reference, acceptance criteria,
+   verification, and pending approval. Real handoffs live under
+   `ew-remote/tickets/<GitHub repository ID>/<issue number>/run-*/`.
+3. Plan a second issue in the same repository and check for `Setup skipped.`
+   Plan the same issue number in a different repository. Run `get` for each
+   repository and issue and compare it with the plan originally returned.
+4. Request a valid issue with no delivered plan and check the diagnostic.
+   A marked checkout with a missing prerequisite reports the failed check
+   before any role starts. Repair the named prerequisite before retrying.
+
+The reader starts a fresh ephemeral Pi process for each role. Its project
+reading tools are limited to the selected checkout. Both roles can query an
+existing `graphify-out/graph.json`. The query runs against a temporary copy so
+Graphify’s query logs leave the source graph untouched. A previously verified
+checkout must still have the expected pack revision to skip setup. The writer saves the brief
+and exposes the completed plan only after the planner returns a pending decision.

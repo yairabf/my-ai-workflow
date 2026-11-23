@@ -94,3 +94,22 @@ Once the selected harness is ready, start `workflow-investigate` in a fresh
 read-only session. Then start `workflow-plan` in another fresh session with
 the mission and the returned brief. Follow the [sample mission and Pi pilot](workflows/development.md#first-pi-pilot)
 for the inputs, expected outputs, and approval handoff.
+
+## Plan a GitHub ticket on the builder
+
+The pack CLI exposes `engineering-workflows plan OWNER/REPO ISSUE_NUMBER` and
+`engineering-workflows get OWNER/REPO ISSUE_NUMBER` in revisions that include
+the builder commands. From this pack checkout, use the equivalent commands below.
+Use Node.js 22 or later and point the Docker CLI at the configured Windows builder
+using its active context or `DOCKER_HOST=ssh://user@builder`.
+
+```sh
+node engineering-workflows/builder-plan.mjs plan OWNER/REPO ISSUE_NUMBER
+node engineering-workflows/builder-plan.mjs get OWNER/REPO ISSUE_NUMBER
+```
+
+`plan` opens or reuses the checkout, checks readiness, and prints the pending Markdown
+plan. The operator can invoke it directly or from a harness with shell access.
+`get` retrieves the last completed plan for that repository and issue. A failed
+rerun leaves the previous plan available. See the [builder pilot](workflows/development.md#remote-ticket-planning)
+for first-use requirements and the project-switching check.

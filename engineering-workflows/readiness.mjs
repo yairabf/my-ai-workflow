@@ -195,7 +195,8 @@ function verifyUiSearch(target, definition, python) {
   }
 }
 
-function verifyHarness(target, harness, skills, python) {
+export function verifyHarness(target, harness, skills, python = pythonCommand(target)) {
+  if (!python) throw new Error('Python 3 is unavailable on PATH.')
   verifyRoles(target, harness, skills)
   for (const skill of prerequisites) {
     const definition = skills.get(skill.id)

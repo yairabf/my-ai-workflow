@@ -7,6 +7,7 @@
 - [x] 1. **Investigator skill** — Turn a mission into a read-only investigation brief with code references, verified findings, assumptions, and open questions.
 - [x] 2. **Planner skill and approval handoff** — Give a fresh planner the mission and brief so it can produce a plan with acceptance criteria and tests for human approval.
 - [x] 3. **Harness setup and first pilot** — Document how to load the shared skills in Pi, OpenCode, Claude Code, and Codex, then verify first-time initiation, repeat entry, and the handoff in two fresh Pi sessions on the OpenHands builder.
+- [x] 16. **Initialize a project and plan a ticket on a remote builder** — Given a GitHub repository and ticket, one operator request opens or reuses the checkout, initializes the workflow when needed, and returns an investigation-backed plan for approval. A second ticket reuses the same project setup. After switching projects, the operator can retrieve the correct pending plan for each repository and ticket.
 
 ## MVP — Manual development workflow
 

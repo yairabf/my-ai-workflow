@@ -1,6 +1,6 @@
 # My AI Workflow - Project Overview
 
-<!-- blueprint:source-hash 413c8675eb095389d299d1e364c63de7bd9e034bc1572540d5861bfd4b48154a -->
+<!-- blueprint:source-hash 5d61dd0120e6ea4a5ee27809a065c46525a82e9fca20392395d0ec6e519b05fe -->
 
 > A reusable development workflow and skills pack for Pi, OpenCode, Claude Code, and Codex.
 
@@ -16,13 +16,13 @@ Switching repositories or agent harnesses means moving skills and rewriting prom
 
 ## Usage model
 
-- Pilot with one operator, one test repository, and one mission at a time. Keep the builder on a local or private network.
-- The operator runs Initiate with authorized write access before the first investigation. Reuse working installations and record readiness per harness after it can use all six prerequisites in the [preparation checklist](../../engineering-workflows/.agents/skills/workflow-initiate/references/preparation.md). With a valid marker and all prerequisites available, start investigation directly. If a marked checkout is missing a prerequisite, report what needs repair.
+- Begin with one operator and one mission at a time on a private or local builder. Extend the first pilot to two repositories to verify project switching and plan retrieval.
+- Initiate uses authorized write access before the first investigation. Record readiness per harness after verifying all six prerequisites in the [preparation checklist](../../engineering-workflows/.agents/skills/workflow-initiate/references/preparation.md). Reuse a ready checkout. Report missing prerequisites in a previously marked checkout.
 - Start roles in fresh sessions with explicit handoff files. Investigation and review have read-only access. Implementation can write to its dedicated worktree.
 - Require human approval of the plan before coding. Pause for a decision when missing information would change scope or acceptance criteria.
 - Review the exact candidate commit against the original mission, approved plan, code, and test evidence. Keep the coder's chat and self-assessment out of the review handoff.
 - Return blocking findings to the coder. Review each revised commit in a fresh session and pause for human input after two unsuccessful repair attempts. A passing review leads to a PR and target-repository CI. A human decides whether to merge.
-- Keep the first release manual. Follow-up installation work first provides one pinned setup command for both workflow roles and all six prerequisites, then adds safe upgrades that preserve local edits. The controller, MCP server, intake connectors, and dashboard are also follow-up work.
+- On the remote builder, one request naming a GitHub repository and ticket starts investigation and planning. The operator initiates work, approves plans, decides whether to merge, and resolves blockers. Verify first on OpenHands on Windows. The general controller, MCP, and bot integrations follow later.
 
 ## Features
 
@@ -33,6 +33,8 @@ Switching repositories or agent harnesses means moving skills and rewriting prom
 1. **Investigator skill** - Produce a read-only brief with code references, verified findings, assumptions, and open questions.
 2. **Planner skill and approval handoff** - Turn the mission and brief into a plan with acceptance criteria and tests for human approval.
 3. **Harness setup and first pilot** - Document setup for all four harnesses, verify first-time initiation and repeat entry, and prove the handoff in two fresh Pi sessions on the OpenHands builder.
+
+- **Build item 16. Initialize a project and plan a ticket on a remote builder** - Open or reuse the requested GitHub project, prepare it on first use, and return a pending plan. Reuse setup across tickets and recover the right plan after switching repositories.
 
 ### Manual MVP
 
@@ -64,7 +66,7 @@ Manual missions travel as explicit handoff files. These fields describe the info
 | Mission | Target repository reference, goal text, acceptance criteria when available (list), optional source reference (bot, Trello, GitHub issue, or manual intake) |
 | Target repository context | Project rules, base branch name, build and test commands, additional project constraints |
 | Investigation brief | Mission reference, code references, verified findings, assumptions, open questions |
-| Implementation plan | Mission and investigation brief references, planned changes, acceptance criteria, tests, human approval decision |
+| Implementation plan | Repository and ticket for remote retrieval, mission and investigation brief references, planned changes, acceptance criteria, tests, human approval decision |
 | Implementation handoff | Approved plan reference, branch and worktree, candidate Git commit SHA, test evidence (commands and results) |
 | Independent review | Candidate SHA, verdict, and findings identifying a relevant acceptance criterion or file and the required change |
 | GitHub delivery | PR URL linking the approved plan, reviewed commit, and test evidence, with target-repository CI results |

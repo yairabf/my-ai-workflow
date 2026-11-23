@@ -6,11 +6,11 @@ I want to use the same engineering workflow across my personal GitHub projects, 
 
 This repo will hold the canonical development workflow, reusable role skills, handoff templates, and harness setup instructions. A mission follows the same path whether it begins in a bot chat, a Trello card, a GitHub issue, or a manual request. The mission carries a target project, a goal, acceptance criteria when available, and an optional source reference.
 
-The first time a target repository uses the workflow, the operator runs **Initiate** before the investigator session. Initiate uses a prerequisite checklist to identify, install, and verify the required skills for the selected harness. The initial list is Graphify, Grill Me, and the thermonuclear code quality review skill. Reuse working installations. Record successful setup with a repository marker once all required skills are available. On later missions, a valid marker and a quick readiness check let the workflow proceed directly to investigation. If a marked checkout is missing a prerequisite, report what needs repair.
+On first use, Initiate prepares the target checkout with authorized write access. It installs or reuses the six prerequisites for the selected harness and records readiness after verification. Later missions check readiness and skip setup when ready. A marked checkout with missing prerequisites reports what needs repair.
 
 After setup, the workflow starts each mission with investigation and planning. I approve the plan before coding begins. The coder works on a dedicated branch and worktree. A separate reviewer assesses the candidate commit against the original mission and approved plan. The reviewer receives the code and test evidence without the coder’s chat or self-assessment. Blocking findings return to the coder, and the next review evaluates the revised commit in a fresh session. A passing review leads to a GitHub PR and CI. A human decides whether to merge.
 
-The first milestone proves one-time initiation and the investigator-to-planner handoff on one test repo. After that, the MVP adds implementation and review to prove the full manual workflow. A future controller can automate the transitions, approvals, retries, and delivery using those same handoffs.
+The first milestone starts with a single-repository pilot and extends it to one-request remote planning across projects. Implementation and independent review follow. The operator initiates tickets, approves plans, decides whether to merge, and resolves blockers. A future controller manages the full workflow.
 
 ## 2. Users - Who is this for?
 
@@ -25,6 +25,7 @@ The first milestone proves one-time initiation and the investigator-to-planner h
 - Portable skills for investigation, planning, implementation, and independent review.
 - Reusable templates for the mission, investigation brief, implementation plan, test evidence, and review findings.
 - A manual quickstart that proves the investigation and planning handoff in two fresh sessions.
+- Remote planning from one operator request naming a GitHub repository and ticket. Open or reuse the checkout, initialize it when needed, and return a pending plan from fresh, read-only investigation and planning sessions. Verify first on OpenHands on Windows. Reuse setup across tickets and retrieve plans by repository and ticket after switching projects.
 - Setup instructions for Pi, OpenCode, Claude Code, and Codex.
 - A test project that demonstrates both a passing review and a finding returned to the coder.
 - A documented GitHub delivery process that links the approved plan, reviewed commit, and test evidence to the PR.
@@ -71,4 +72,4 @@ The pack itself has no build command, start command, database, worker, environme
 - Give each role a fresh session and pass context through explicit handoffs. Enforce read-only access for investigation and review and grant the coder write access to its worktree.
 - Pause before implementation if a missing decision would change scope or acceptance criteria. Pause for human input after two unsuccessful repair attempts.
 - Bind a passing review to the exact candidate commit. A revised commit requires a fresh review.
-- Keep the initial scope to the shared pack, operator-led initiation, and manual workflow. The versioned installer is follow-up work. First provide one pinned setup command that installs Initiate, Investigator, and all six prerequisites in a target Git project. Reuse working installations and report what needs repair. Then add safe upgrades that preserve local edits. The automated controller, MCP server, bot and Trello connectors, and custom dashboard are also follow-up work.
+- Use the existing pinned setup command for project initialization. Automate the handoffs through a pending plan on the remote builder. Safe pack upgrades, the general mission controller, MCP server, bot and Trello connectors, and custom dashboard are follow-up work.

@@ -37,11 +37,14 @@ function sourceRevision() {
   return commit
 }
 
-const usage = 'Usage: engineering-workflows setup'
+const usage = 'Usage: engineering-workflows setup | <plan|get> <owner/repository> <issue-number>'
 try {
   const args = process.argv.slice(2)
   if (args.length === 1 && args[0] === '--help') {
     console.log(usage)
+  } else if (args[0] === 'plan' || args[0] === 'get') {
+    const { runBuilderRequest } = await import('./builder-plan.mjs')
+    runBuilderRequest(args)
   } else if (args.length === 1 && args[0] === 'setup') {
     const target = checkoutRoot(process.cwd())
     install(target, sourceRevision(), { githubCi: true })

@@ -88,7 +88,7 @@ function fetchSource(skill, stage, missing) {
   if (revision !== skill.revision) throw new Error(`Unexpected source revision for ${skill.repository}.`)
 }
 
-function graphifyRuntime(target, packageName) {
+export function graphifyRuntime(target, packageName) {
   if (command('graphify', ['--version'], target).status === 0) return
   const tool = ['uv', 'pipx'].find((bin) => command(bin, ['--version'], target).status === 0)
   if (!tool) throw new Error('Install uv or pipx to provision the missing Graphify CLI.')

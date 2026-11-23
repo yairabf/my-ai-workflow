@@ -25,10 +25,42 @@
 6. Open a fresh, read-only session for [workflow-review](../.agents/skills/workflow-review/SKILL.md).
    Supply the mission, exact approved plan, repository, intended base, full candidate SHA,
    and factual check evidence. Keep developer chat and self-assessment out of the handoff.
-   Save the returned verdict beside the mission.
+   Save the returned verdict as `independent-review.md` beside the mission, outside the target repository. Follow the [review and repair loop](#review-and-repair-loop).
 
 On later missions, Initiate skips setup when the recorded harness passes
 its quick check.
+
+## Review and repair loop
+
+Read the verdict for the candidate SHA. On **Pass**, send that exact SHA to
+[GitHub delivery and CI](#deliver-a-reviewed-change-to-github). The human makes
+the merge decision. An initial **Changes requested** opens round 1 with zero
+unsuccessful repairs.
+
+1. Give the developer the saved review, its full SHA, the existing implementation
+   handoff, and the approved plan. The developer resumes on the dedicated branch
+   in its worktree, commits the corrections, and returns the revised SHA with
+   test commands and observed results for each finding. Save this handoff as
+   `repair-1.md` beside the mission, linked to `independent-review.md`.
+2. Open a fresh read-only reviewer session with the inputs from step 6 above,
+   the review requesting changes, and the factual evidence from the repair
+   handoff. Check that the returned verdict identifies the handoff’s exact SHA.
+   Save the report as `review-1.md` alongside the handoff.
+3. A **Pass** at either round goes to delivery. A **Changes requested** on a
+   revised SHA counts as one unsuccessful repair, even if several findings remain
+   or a new required change appeared. After the first, repeat steps 1 and 2
+   using `review-1.md` as the request. Save `repair-2.md` and `review-2.md`.
+4. After the second unsuccessful repair, pause. Give the human both reviewed
+   repair SHAs, the outstanding corrections, and links to the initial review
+   and both handoff/report pairs. Ask how to proceed and wait for the decision
+   before starting any further repair.
+
+At any stage, **Blocked** pauses that review. Record the missing input and obtain
+it (for example, a test result for the exact SHA). Resume the same round and
+append the subsequent verdict and SHA to the same report, preserving the blocked
+entry. Count the completed outcome once. If a different commit is submitted,
+preserve its handoff and evidence alongside the earlier entry and open a fresh
+review session for that SHA.
 
 ## First Pi pilot
 

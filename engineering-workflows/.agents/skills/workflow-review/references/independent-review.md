@@ -5,6 +5,10 @@
 - **Candidate** — Record the verified full SHA. Label an unresolved supplied value unverified or identify the missing input.
 - **Verdict** — Pass, Changes requested, or Blocked. Give the deciding reason.
 
+## Repair review (for a revised candidate)
+
+Link the numbered repair handoff and the review that requested changes. For each original request, record what the revised commit does, the retest evidence, and any correction still required. Include newly discovered blockers under required changes. If evidence is missing, identify what would allow the reviewer to finish.
+
 ## Acceptance criteria
 
 For each criterion, identify the relevant candidate code and assessment. Attribute

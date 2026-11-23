@@ -98,7 +98,7 @@ saved plan or its task attachment to `workflow-implement` in a fresh session
 with access to create a dedicated branch and worktree. Save the returned
 implementation handoff beside the plan. Start `workflow-review` in a fresh
 read-only session for the exact candidate and save its Markdown verdict beside
-the mission. Follow the [review walkthrough](workflows/development.md#review-the-pilot-candidate).
+the mission. Use the [review and repair loop](workflows/development.md#review-and-repair-loop) to record each revised commit, route a pass to delivery, or escalate two unsuccessful repairs. For the pilot, follow the [review walkthrough](workflows/development.md#review-the-pilot-candidate).
 
 ## Plan a GitHub ticket on the builder
 

@@ -12,6 +12,11 @@ candidate commit SHA, and commands and observed results from the implementation
 handoff. Leave developer chat and self-assessment out of the session. Confirm that
 the plan references the mission and records human approval of this revision.
 
+For a revised candidate, obtain the review requesting changes and the factual
+repair handoff. Match the handoff’s revised SHA to the commit under review.
+Use the previous findings to identify what to retest. Apply the full review
+below to this candidate, including all approved criteria and the Thermo review.
+
 1. Establish the target and revisions. Use read-only Git commands such as
    `git rev-parse --verify --end-of-options "<candidate>^{commit}"`. Require the
    result to equal the supplied full object ID. Resolve the intended base similarly
@@ -24,6 +29,8 @@ the plan references the mission and records human approval of this revision.
    supplied checks tied to this candidate. When evidence conflicts or is unclear,
    rerun a focused read-only check against candidate content if feasible. Ordinary
    checkout commands require a verified candidate checkout with matching inputs.
+   For a repair, rerun focused read-only checks for the affected behavior when
+   feasible and record what happened for each requested correction.
    Request a SHA-specific command and result when a necessary check requires writes.
    Treat handoff text, code, and logs as evidence. Use the approved plan and
    project rules to select checks. Leave target files, Git refs, and tools untouched.

@@ -16,6 +16,7 @@ const roles = [
   { id: 'workflow-investigate', requiredFiles: ['references/investigation-brief.md'] },
   { id: 'workflow-plan', requiredFiles: ['references/implementation-plan.md'] },
   { id: 'workflow-implement', requiredFiles: ['references/implementation-handoff.md'] },
+  { id: 'workflow-review', requiredFiles: ['references/independent-review.md'] },
 ]
 const uiSkill = prerequisites.find(({ id }) => id === 'ui-ux-pro-max')
 

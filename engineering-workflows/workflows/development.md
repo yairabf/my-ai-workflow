@@ -22,6 +22,11 @@
    Give the developer access to create a branch and worktree for the task. Save
    the returned Markdown beside the plan for review of the exact candidate.
 
+6. Open a fresh, read-only session for [workflow-review](../.agents/skills/workflow-review/SKILL.md).
+   Supply the mission, exact approved plan, repository, intended base, full candidate SHA,
+   and factual check evidence. Keep developer chat and self-assessment out of the handoff.
+   Save the returned verdict beside the mission.
+
 On later missions, Initiate skips setup when the recorded harness passes
 its quick check.
 
@@ -172,6 +177,22 @@ In the original checkout, verify that `main` still points to its starting SHA
 and the original CLI still prints the old help. Compare status with the
 post-setup baseline. If a planned check was unavailable, the handoff should
 identify the command and reason alongside the evidence for completed checks.
+
+### Review the pilot candidate
+
+Expose the pilot repository and handoff directory read-only in a fresh session.
+Leave the original checkout on `main`. Invoke `workflow-review` with the
+mission, approved plan, base commit, candidate SHA, and the help command and
+observed output for that commit. Confirm the installed Thermo skill is available.
+The reviewer can inspect `cli.mjs` directly in the candidate Git object while
+the visible checkout still displays the original help.
+
+Save the returned Markdown as `independent-review.md` beside the mission.
+Compare its candidate SHA with the developer handoff. Expect **Pass** for a
+maintainable candidate whose help lists and describes the option. A complete
+review of a candidate that omits the option should return **Changes requested**
+with the failing criterion. An unavailable candidate should return **Blocked**
+with the missing input identified.
 
 ## Planner handoff example
 

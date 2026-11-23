@@ -20,7 +20,7 @@ import { fileURLToPath } from 'node:url'
 
 const pack = fileURLToPath(new URL('.', import.meta.url))
 const source = dirname(resolve(pack))
-const roles = ['workflow-initiate', 'workflow-investigate', 'workflow-plan']
+const roles = ['workflow-initiate', 'workflow-investigate', 'workflow-plan', 'workflow-implement']
 const roots = ['.agents/skills', '.claude/skills']
 const prerequisites = ['.agents/skills/grill-me', '.agents/skills/grilling']
 

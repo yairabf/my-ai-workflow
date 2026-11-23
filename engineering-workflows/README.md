@@ -48,7 +48,7 @@ install its CLI with `uv` or `pipx`.
 npx --yes --allow-git=root --package='git+ssh://git@github.com/yairabf/my-ai-workflow.git#<commit>' -- engineering-workflows setup
 ```
 
-Setup registers `workflow-initiate`, `workflow-investigate`, and `workflow-plan` and prepares
+Setup registers `workflow-initiate`, `workflow-investigate`, `workflow-plan`, and `workflow-implement` and prepares
 Graphify, Grill Me, thermonuclear code quality review, Taste, Impeccable, and UI UX
 Pro Max for Pi, OpenCode, Claude Code, and Codex. It stores the source commit
 in `.engineering-workflows/revision.txt`. The npm Git flag applies only to
@@ -93,7 +93,10 @@ before starting the Investigator.
 Once the selected harness is ready, start `workflow-investigate` in a fresh
 read-only session. Then start `workflow-plan` in another fresh session with
 the mission and the returned brief. Follow the [sample mission and Pi pilot](workflows/development.md#first-pi-pilot)
-for the inputs, expected outputs, and approval handoff.
+for the inputs, expected outputs, and approval handoff. Once approved, give the
+saved plan or its task attachment to `workflow-implement` in a fresh session
+with access to create a dedicated branch and worktree. Save the returned
+implementation handoff beside the plan.
 
 ## Plan a GitHub ticket on the builder
 

@@ -249,7 +249,7 @@ async function run() {
       registration(checkout, id),
     ])
     const discovered = await catalog(piBinary(), [...flags, ...skills])
-    const pending = verifyHarness(checkout, 'pi', discovered)
+    const pending = verifyHarness(checkout, 'pi', discovered, undefined, roles)
     if (pending) throw new Error(pending)
     return 'Readiness passed in the reader.'
   }

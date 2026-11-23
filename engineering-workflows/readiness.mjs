@@ -15,6 +15,7 @@ const roles = [
   ] },
   { id: 'workflow-investigate', requiredFiles: ['references/investigation-brief.md'] },
   { id: 'workflow-plan', requiredFiles: ['references/implementation-plan.md'] },
+  { id: 'workflow-implement', requiredFiles: ['references/implementation-handoff.md'] },
 ]
 const uiSkill = prerequisites.find(({ id }) => id === 'ui-ux-pro-max')
 
@@ -134,8 +135,8 @@ function pythonCommand(target) {
     /^Python 3\./.test(command(binary, [...args, '--version'], target).stdout ?? ''))
 }
 
-function verifyRoles(target, harness, skills) {
-  for (const role of roles) {
+function verifyRoles(target, harness, skills, roleIds) {
+  for (const role of roles.filter(role => roleIds.includes(role.id))) {
     const found = skills.get(role.id)
     if (!found) throw new Error(`${role.id} is missing or disabled in the harness catalog.`)
     const shared = join(target, '.agents/skills', role.id)
@@ -195,9 +196,9 @@ function verifyUiSearch(target, definition, python) {
   }
 }
 
-export function verifyHarness(target, harness, skills, python = pythonCommand(target)) {
+export function verifyHarness(target, harness, skills, python = pythonCommand(target), roleIds = roles.map(role => role.id)) {
   if (!python) throw new Error('Python 3 is unavailable on PATH.')
-  verifyRoles(target, harness, skills)
+  verifyRoles(target, harness, skills, roleIds)
   for (const skill of prerequisites) {
     const definition = skills.get(skill.id)
     if (!definition) throw new Error(`${skill.id} is missing or disabled in the harness catalog.`)

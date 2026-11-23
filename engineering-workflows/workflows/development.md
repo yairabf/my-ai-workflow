@@ -17,6 +17,11 @@
    while requests for changes or clarification are open. If the plan changes
    materially, reset the decision to `Pending` and ask for approval again.
 
+5. In a fresh developer session, invoke [workflow-implement](../.agents/skills/workflow-implement/SKILL.md)
+   with the target checkout and the saved approved revision or its task link.
+   Give the developer access to create a branch and worktree for the task. Save
+   the returned Markdown beside the plan for review of the exact candidate.
+
 On later missions, Initiate skips setup when the recorded harness passes
 its quick check.
 
@@ -83,7 +88,7 @@ for the investigation.
    a fresh disposable checkout.
 2. Run the [commit-pinned setup command](../README.md#github-commit-pinned-setup)
    from the target root with write access. Use a published pack SHA that
-   includes all three roles, and record the SHA and setup outcome. Load
+   includes the pilot roles, and record the SHA and setup outcome. Load
    `workflow-initiate` in Pi with the target path, harness `pi`, and
    authorization to prepare that checkout. Follow the
    [readiness checks](../.agents/skills/workflow-initiate/references/readiness.md)
@@ -151,6 +156,22 @@ the two repeat-entry snapshots and skip report, and the mission, brief, and
 plan. Identify the two fresh Pi sessions and how checkout write access was
 disabled. Leave credentials out of the evidence. If any stage is blocked,
 include the stage and exact failed or unavailable check.
+
+### Exercise the developer handoff
+
+After a human approves the pilot plan, record that decision in the saved
+revision. Open a fresh developer session with the installed role, the target
+checkout, its base branch `main`, and the path to that revision. The session
+needs write access to Git metadata and a free sibling worktree location.
+Keep the planning and investigation sessions read-only.
+
+Save the returned Markdown in the handoff directory. In the reported worktree,
+compare `git rev-parse HEAD` with its candidate SHA and run `node cli.mjs --help`.
+Expect the help to describe `--output <directory>` as the output destination.
+In the original checkout, verify that `main` still points to its starting SHA
+and the original CLI still prints the old help. Compare status with the
+post-setup baseline. If a planned check was unavailable, the handoff should
+identify the command and reason alongside the evidence for completed checks.
 
 ## Planner handoff example
 

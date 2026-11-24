@@ -26,11 +26,11 @@ try {
   const manifestPath = join(destination, 'package.json')
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'))
   delete manifest.private
+  delete manifest.repository
   Object.assign(manifest, {
     name,
     version,
     bin: { ew: manifest.bin['engineering-workflows'] },
-    repository: { type: 'git', url: 'https://github.com/yairabf/my-ai-workflow.git' },
     publishConfig: { registry, access: 'restricted' },
     engineeringWorkflowsRelease: { sourceCommit: commit },
   })

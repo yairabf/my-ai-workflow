@@ -2,12 +2,112 @@
 
 ## Private package release pending
 
-The first release installed successfully from GitHub Packages, but GitHub
-listed it publicly despite the restricted publish request. The release workflow
-is disabled while private distribution is resolved. Use the GitHub
-commit-pinned setup below in the meantime.
+The first release installed successfully from GitHub Packages and failed
+the visibility check. The public repository's workflow is disabled and
+its current definition only inspects the package. Use the GitHub
+commit-pinned setup below while the private release is pending.
 
 [Release run and visibility check](https://github.com/yairabf/my-ai-workflow/actions/runs/44926621910)
+
+### Publish as the package owner
+
+Use Git, a current GitHub CLI, Node.js 22 or newer, and npm 12 or newer.
+Start from a clean checkout of the reviewed `main` at
+`yairabf/my-ai-workflow`. Supply `GH_TOKEN` in the environment with a
+classic personal access token owned by `yairabf` with `read:packages`
+and `write:packages`. The release uses the personal namespace and an
+unlinked manifest so GitHub applies its private default on creation.
+
+[GitHub npm registry authentication and visibility](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-npm-registry)
+
+Run the read-only check first from the repository root.
+
+```sh
+node engineering-workflows/check-package-visibility.mjs before
+```
+
+Proceed only if GitHub confirms the package is private or confirms it
+is absent from the authenticated owner's package list. On any other
+visibility, access failure, or unclear response, stop. If GitHub rejects
+the intended version, stop for an owner decision on package recovery or
+versioning. If resuming verification of an already published private
+version, skip publishing and check the pinned version and source SHA
+below.
+
+To publish the reviewed revision, run this block in Bash from the
+repository root. It stages and inspects a tarball from committed files,
+then repeats the visibility check immediately before upload.
+
+```bash
+(
+  set -euo pipefail
+  test "$(git branch --show-current)" = main
+  test -z "$(git status --porcelain)"
+  source_sha=$(git rev-parse HEAD)
+  test "$(git ls-remote https://github.com/yairabf/my-ai-workflow.git refs/heads/main)" = "$(printf '%s\trefs/heads/main' "$source_sha")"
+  repo_root=$(pwd)
+  release_dir=$(mktemp -d)
+  trap 'rm -rf -- "$release_dir"' EXIT
+  archive=$(bash .github/scripts/pack-engineering-workflows "$release_dir")
+  cd "$release_dir"
+  cat > npmrc <<'EOF'
+@yairabf:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GH_TOKEN}
+EOF
+  export NPM_CONFIG_USERCONFIG="$release_dir/npmrc"
+  node "$repo_root/engineering-workflows/check-package-visibility.mjs" before
+  npm publish "$archive" --ignore-scripts --access restricted --registry https://npm.pkg.github.com
+  node "$repo_root/engineering-workflows/check-package-visibility.mjs" after
+)
+```
+
+### Verify the private release
+
+Use a classic `read:packages` token for `GH_TOKEN` owned by `yairabf`.
+Run the block from the checkout of the published source commit. Set
+`version` to the exact version under verification. The smoke check uses
+a fresh npm cache and a fresh Git project. npm fetches the pinned
+package with the token, then setup runs from that cache with the token
+and npm authentication removed.
+
+```bash
+(
+  set -euo pipefail
+  version=1.0.0
+  source_sha=$(git rev-parse HEAD)
+  node engineering-workflows/check-package-visibility.mjs after
+  smoke_dir=$(mktemp -d)
+  trap 'rm -rf -- "$smoke_dir"' EXIT
+  cat > "$smoke_dir/npmrc" <<'EOF'
+@yairabf:registry=https://npm.pkg.github.com
+//npm.pkg.github.com/:_authToken=${GH_TOKEN}
+EOF
+  export NPM_CONFIG_USERCONFIG="$smoke_dir/npmrc"
+  export NPM_CONFIG_CACHE="$smoke_dir/npm-cache"
+  git init --quiet "$smoke_dir/target"
+  cd "$smoke_dir/target"
+  npm exec --yes --ignore-scripts --package="@yairabf/ew@$version" -- true
+  unset GH_TOKEN
+  printf '%s\n' '@yairabf:registry=https://npm.pkg.github.com' > "$NPM_CONFIG_USERCONFIG"
+  npx --offline --yes "@yairabf/ew@$version" setup
+  test "$(cat .engineering-workflows/revision.txt)" = "$source_sha"
+  for role in workflow-initiate workflow-investigate workflow-plan workflow-implement workflow-review; do
+    test -f ".agents/skills/$role/SKILL.md"
+    test -f ".claude/skills/$role/SKILL.md"
+  done
+  test -f .agents/skills/workflow-investigate/references/investigation-brief.md
+  for skill in graphify grill-me grilling thermo-nuclear-code-quality-review design-taste-frontend impeccable ui-ux-pro-max; do
+    test -f ".agents/skills/$skill/SKILL.md"
+  done
+  test ! -e package.json
+  test ! -e package-lock.json
+  test -z "$(git ls-files)"
+  printf 'Verified private @yairabf/ew@%s from %s\n' "$version" "$source_sha"
+)
+```
+
+Record the version, source SHA, private visibility, and smoke check
+result before closing feature 9c.
 
 ## GitHub CI
 

@@ -1,0 +1,46 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# != 1 || ! -d "$1" ]]; then
+  echo 'Usage: bash .github/scripts/pack-engineering-workflows <existing-output-directory>' >&2
+  exit 1
+fi
+output=$(cd "$1" && pwd)
+source=$(git rev-parse HEAD)
+staged="$output/ew-release"
+node engineering-workflows/stage-release.mjs "$staged" >&2
+npm pack "$staged" --ignore-scripts --json --pack-destination "$output" > "$output/ew-pack.json"
+filename=$(node - "$output/ew-pack.json" <<'JS'
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const pack = JSON.parse(fs.readFileSync(process.argv[2]))
+const { filename, files } = Array.isArray(pack) ? pack[0] : pack['@yairabf/ew']
+assert.match(filename, /^yairabf-ew-\d+\.\d+\.\d+\.tgz$/)
+const packaged = new Set(files.map(({ path }) => path))
+for (const path of packaged) {
+  assert.match(path, /^(?:package\.json$|engineering-workflows\/|\.agents\/skills\/(?:grill-me|grilling)\/)/)
+  assert(!/(?:^|\/)(?:\.npmrc|\.env[^/]*|\.engineering-workflows)(?:\/|$)/.test(path), path)
+}
+for (const root of ['.agents/skills', '.claude/skills']) {
+  for (const role of ['workflow-initiate', 'workflow-investigate', 'workflow-plan', 'workflow-implement', 'workflow-review']) {
+    assert(packaged.has(`engineering-workflows/${root}/${role}/SKILL.md`))
+  }
+}
+for (const skill of ['grill-me', 'grilling']) {
+  assert(packaged.has(`.agents/skills/${skill}/SKILL.md`))
+}
+process.stdout.write(filename)
+JS
+)
+archive="$output/$filename"
+tar -xOf "$archive" package/package.json | node -e '
+const assert = require("node:assert/strict")
+const manifest = JSON.parse(require("node:fs").readFileSync(0, "utf8"))
+assert.equal(manifest.name, "@yairabf/ew")
+assert.equal(manifest.publishConfig.registry, "https://npm.pkg.github.com")
+assert.equal(manifest.publishConfig.access, "restricted")
+assert.equal(manifest.repository, undefined)
+assert.equal(manifest.engineeringWorkflowsRelease.sourceCommit, process.argv[1])
+assert.match(manifest.version, /^\d+\.\d+\.\d+$/)
+' "$source"
+printf '%s\n' "$archive"

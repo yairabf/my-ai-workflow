@@ -9,14 +9,11 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  publish:
+  inspect:
     if: github.repository == 'yairabf/my-ai-workflow' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-      packages: write
-    outputs:
-      spec: ${{ steps.stage.outputs.spec }}
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
@@ -24,124 +21,5 @@ jobs:
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
         with:
           node-version: '26'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@yairabf'
       - name: Stage and inspect the package
-        id: stage
-        run: |
-          staged="$RUNNER_TEMP/ew-release"
-          node engineering-workflows/stage-release.mjs "$staged"
-          node - "$staged/package.json" "$GITHUB_SHA" "$GITHUB_OUTPUT" <<'JS'
-          const assert = require('node:assert/strict')
-          const fs = require('node:fs')
-          const manifest = JSON.parse(fs.readFileSync(process.argv[2]))
-          assert.equal(manifest.name, '@yairabf/ew')
-          assert.equal(manifest.publishConfig.registry, 'https://npm.pkg.github.com')
-          assert.equal(manifest.publishConfig.access, 'restricted')
-          assert.equal(manifest.engineeringWorkflowsRelease.sourceCommit, process.argv[3])
-          assert.match(manifest.version, /^\d+\.\d+\.\d+$/)
-          fs.appendFileSync(process.argv[4], `spec=${manifest.name}@${manifest.version}\n`)
-          JS
-          npm pack "$staged" --ignore-scripts --json --pack-destination "$RUNNER_TEMP" > "$RUNNER_TEMP/ew-pack.json"
-          node - "$RUNNER_TEMP/ew-pack.json" "$GITHUB_OUTPUT" <<'JS'
-          const assert = require('node:assert/strict')
-          const fs = require('node:fs')
-          const pack = JSON.parse(fs.readFileSync(process.argv[2]))
-          const { filename, files } = Array.isArray(pack) ? pack[0] : pack['@yairabf/ew']
-          assert.match(filename, /^yairabf-ew-\d+\.\d+\.\d+\.tgz$/)
-          const packaged = new Set(files.map(({ path }) => path))
-          for (const path of packaged) {
-            assert.match(path, /^(?:package\.json$|engineering-workflows\/|\.agents\/skills\/(?:grill-me|grilling)\/)/)
-            assert(!/(?:^|\/)(?:\.npmrc|\.env[^/]*|\.engineering-workflows)(?:\/|$)/.test(path), path)
-          }
-          for (const root of ['.agents/skills', '.claude/skills']) {
-            for (const role of ['workflow-initiate', 'workflow-investigate']) {
-              assert(packaged.has(`engineering-workflows/${root}/${role}/SKILL.md`))
-            }
-          }
-          for (const skill of ['grill-me', 'grilling']) {
-            assert(packaged.has(`.agents/skills/${skill}/SKILL.md`))
-          }
-          fs.appendFileSync(process.argv[3], `archive=${filename}\n`)
-          console.log(`Inspected ${files.length} packaged files.`)
-          JS
-      - name: Confirm the package name is not public
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          public_names=$(gh api --paginate '/users/yairabf/packages?package_type=npm&visibility=public&per_page=100' --jq '.[].name')
-          if grep -Eq '^(ew|@yairabf/ew)$' <<< "$public_names"; then
-            echo 'The package name already has public visibility.'
-            exit 1
-          fi
-      - name: Publish the private version
-        env:
-          NODE_AUTH_TOKEN: ${{ github.token }}
-          PACKAGE_SPEC: ${{ steps.stage.outputs.spec }}
-          ARCHIVE: ${{ steps.stage.outputs.archive }}
-        run: |
-          if npm view "$PACKAGE_SPEC" version --json > "$RUNNER_TEMP/ew-existing.json" 2> "$RUNNER_TEMP/ew-existing.err"; then
-            mkdir "$RUNNER_TEMP/ew-existing"
-            npm pack "$PACKAGE_SPEC" --ignore-scripts --json --pack-destination "$RUNNER_TEMP/ew-existing" > "$RUNNER_TEMP/ew-existing/pack.json"
-            filename=$(node -p "const p = require(process.argv[1]); (Array.isArray(p) ? p[0] : p['@yairabf/ew']).filename" "$RUNNER_TEMP/ew-existing/pack.json")
-            tar -xOf "$RUNNER_TEMP/ew-existing/$filename" package/package.json > "$RUNNER_TEMP/ew-existing/manifest.json"
-            node - "$RUNNER_TEMP/ew-existing/manifest.json" "$PACKAGE_SPEC" "$GITHUB_SHA" <<'JS'
-            const fs = require('node:fs')
-            const manifest = JSON.parse(fs.readFileSync(process.argv[2]))
-            if (`${manifest.name}@${manifest.version}` !== process.argv[3] ||
-                manifest.engineeringWorkflowsRelease?.sourceCommit !== process.argv[4]) {
-              throw new Error('This package version already belongs to a different source revision.')
-            }
-            console.log('The same version and source revision are already published.')
-          JS
-          elif grep -Eq 'npm (ERR!|error) code E404' "$RUNNER_TEMP/ew-existing.err" ||
-               grep -Eq '"code": "E404"' "$RUNNER_TEMP/ew-existing.json"; then
-            npm publish "$RUNNER_TEMP/$ARCHIVE" --ignore-scripts --access restricted --registry https://npm.pkg.github.com
-          else
-            echo 'Could not check existing GitHub Packages versions. Check the workflow package permissions.'
-            exit 1
-          fi
-
-  verify:
-    needs: publish
-    runs-on: ubuntu-24.04
-    permissions:
-      packages: read
-    steps:
-      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
-        with:
-          node-version: '26'
-          registry-url: 'https://npm.pkg.github.com'
-          scope: '@yairabf'
-      - name: Verify the scoped command in a fresh project
-        env:
-          NODE_AUTH_TOKEN: ${{ github.token }}
-          PACKAGE_SPEC: ${{ needs.publish.outputs.spec }}
-          npm_config_yes: 'true'
-        run: |
-          export PATH="$HOME/.local/bin:$PATH"
-          target=$(mktemp -d)
-          git init --quiet "$target"
-          cd "$target"
-          npm view "$PACKAGE_SPEC" version --json
-          npx "$PACKAGE_SPEC" setup
-          test "$(cat .engineering-workflows/revision.txt)" = "$GITHUB_SHA"
-          test -f .agents/skills/workflow-initiate/SKILL.md
-          test -f .agents/skills/workflow-investigate/references/investigation-brief.md
-          test -f .claude/skills/workflow-initiate/SKILL.md
-          for skill in graphify grill-me grilling thermo-nuclear-code-quality-review design-taste-frontend impeccable ui-ux-pro-max; do
-            test -f ".agents/skills/$skill/SKILL.md"
-          done
-          test ! -e package.json
-          test ! -e package-lock.json
-          test -z "$(git ls-files)"
-      - name: Verify private visibility
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          public_names=$(gh api --paginate '/users/yairabf/packages?package_type=npm&visibility=public&per_page=100' --jq '.[].name')
-          if grep -Eq '^(ew|@yairabf/ew)$' <<< "$public_names"; then
-            echo 'The verified package has public visibility.'
-            exit 1
-          fi
-          echo 'Authenticated installation succeeded and the package is absent from the public package list.'
+        run: bash .github/scripts/pack-engineering-workflows "$RUNNER_TEMP"

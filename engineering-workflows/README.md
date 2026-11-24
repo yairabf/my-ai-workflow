@@ -100,6 +100,8 @@ implementation handoff beside the plan. Start `workflow-review` in a fresh
 read-only session for the exact candidate and save its Markdown verdict beside
 the mission. Use the [review and repair loop](workflows/development.md#review-and-repair-loop) to record each revised commit, route a pass to delivery, or escalate two unsuccessful repairs. For the pilot, follow the [review walkthrough](workflows/development.md#review-the-pilot-candidate).
 
+For a completed example of a reviewer finding a missing requirement, follow the [end-to-end pilot run](workflows/development.md#end-to-end-pilot-run) from manual intake through GitHub CI.
+
 ## Plan a GitHub ticket on the builder
 
 The pack CLI exposes `engineering-workflows plan OWNER/REPO ISSUE_NUMBER` and

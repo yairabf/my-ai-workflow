@@ -15,7 +15,7 @@
 - [x] 5. **Independent review skill** — Review the exact candidate commit in a fresh, read-only session using the mission, approved plan, code, and test evidence.
 - [x] 6. **Review and repair loop** — Send blocking findings back to the coder, review each revised commit in a fresh session, and pause for human input after two unsuccessful repair attempts.
 - [x] 7. **GitHub delivery and CI** — Open a PR after review passes, include the plan and evidence, run the target repo’s CI, and leave the merge decision to a human.
-- [ ] 8. **End-to-end workflow example** — Run a sample mission through plan approval, a requested fix, a passing review, and a GitHub PR with CI results.
+- [x] 8. **End-to-end workflow example** — Run a sample mission through plan approval, a requested fix, a passing review, and a GitHub PR with CI results.
 
 ## After the MVP — Installation and automation
 

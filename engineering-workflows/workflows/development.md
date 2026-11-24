@@ -226,6 +226,23 @@ review of a candidate that omits the option should return **Changes requested**
 with the failing criterion. An unavailable candidate should return **Blocked**
 with the missing input identified.
 
+## End-to-end pilot run
+
+The operator used separate Pi sessions in the Windows builder’s OpenHands containers and kept the mission and role outputs in a sibling handoff directory. The example uses a private [pilot repository](https://github.com/yairabf/engineering-workflows-pilot). Repository access is required for the GitHub evidence.
+
+| Stage | What the operator supplied | What came back |
+| --- | --- | --- |
+| Prepare | The [CLI fixture](#prepare-the-checkout-and-mission), a target-owned CLI test and a PR workflow that runs it. | At baseline `793871d`, help omitted the output option. The CLI resolved `reports` against the working directory. Pi readiness passed with the five project roles explicitly registered. |
+| Investigate | A manual mission naming the baseline, help requirement and existing output behavior. The fresh reader had project-scoped read tools and the operator’s baseline results. | The brief identified the string-valued parser option, the incomplete help text, and the two existing test cases. |
+| Plan | The same mission and the saved brief in a new reader session. | Plan revision 1 proposed changing only help text and verifying both CLI commands and the existing tests. The operator presented it to the user and recorded explicit approval. |
+| Implement | The approved revision and a developer-only instruction to omit the description on the first submission. | The developer created a sibling worktree, committed `49447b3`, and returned the full SHA and results. Usage listed `--output <directory>`. One test passed and one failed. |
+| Review | The approved plan, mission, exact revisions, committed code and command results. The reviewer had read-only access to the candidate. | **Changes requested.** The reviewer traced the missing destination description to the help output and failed assertion, applied Thermo, and requested a new commit. |
+| Repair | The saved finding, original handoff and approved plan in the same developer worktree. | The coder added the destination description. Both tests passed on `78c6685`. |
+| Review again | The revised SHA, prior finding, factual repair evidence and complete candidate files in a fresh reader session. | **Pass.** The reviewer checked the repaired help and existing resolution behavior and recorded both passing tests. |
+| Deliver | The exact reviewed branch, approved plan and both review reports. | [Pilot PR #1](https://github.com/yairabf/engineering-workflows-pilot/pull/1) opened at `78c66850930e98a28be9028e8c0c5d9a1eb5f486`. The [target CI job](https://github.com/yairabf/engineering-workflows-pilot/actions/runs/45242063852/job/137929009639) passed on this PR head. The operator left the merge decision to the user. |
+
+The operator ran Git and CLI checks against each exact candidate and supplied the results to its reviewer. Each reviewer independently read the complete CLI, tests and CI workflow. The target had only Pilot CI active. Advisory OpenCodeReview had no run for this delivery.
+
 ## Planner handoff example
 
 This example assumes a target checkout where `cli.mjs` defines help text and
@@ -274,11 +291,18 @@ the investigation brief identifies `node cli.mjs --help` as the check.
 3. Read the OpenCodeReview summary and unresolved inline findings on the PR.
    The advisory review runs from the trusted default branch, and its workflow
    run can appear separately from PR checks. Use
-   `gh run list --workflow engineering-workflows.yml --event pull_request_target`
-   to find it and compare the PR number and reviewed SHA in the job summary
-   with the current head. A draft, fork, or Dependabot PR can have review
-   skipped. A setup error, unavailable provider, or failed action means
-   review is unavailable. Record the state and the link when there is a run.
+   `gh run list --event pull_request_target` to find the target repository’s
+   review workflow. Match its PR number and reviewed SHA to the current head.
+   Record an expected skip for a draft, fork, or Dependabot PR.
+
+   If the reviewer fails before posting a verdict, record the failed step and
+   run link. Keep the review pending while the operator investigates. Retry
+   on the same head when the diagnostic supports it. If the failure repeats,
+   change the approach. For an oversized group, review the outstanding files
+   in smaller batches, subtract actual usage from one shared allowance, and
+   retain completed batches for that SHA. If recovery requires broader CI
+   changes or more spend, present that decision to the human. Record any
+   explicit decision to proceed without the advisory review.
 4. Reproduce a failed check and validate each review finding against the code.
    Fix confirmed issues on the PR branch. For a disputed finding, record the
    evidence and ask the independent reviewer to apply Thermo when the issue
@@ -287,8 +311,18 @@ the investigation brief identifies `node cli.mjs --help` as the check.
 5. Rerun local Verify and get fresh independent review when fixes change the
    reviewed commit. After updating the PR, repeat the check and review lookup
    for its new head. Results from superseded commits do not verify the new one.
-   Follow the project's repair limit and report unresolved issues. Hand the
-   human the latest SHA, checks, and findings for the merge decision.
+   Follow the project's repair limit and report unresolved issues.
+   For a recovered review, match posted summaries to the intended PR head.
+   Compare the combined set of completed files with the original selection
+   and inspect the findings. Give the human the latest SHA, check results,
+   findings, and any accepted limitation.
+6. When the required checks pass and the OpenCodeReview findings are resolved,
+   ask the human directly: “Approve merging PR #<number> at `<reviewed SHA>`?”
+   Wait for explicit approval. Use the approved head as the merge precondition
+   (for example, `gh pr merge --match-head-commit <full-reviewed-SHA>` with the
+   PR and repository’s merge method). If the head changes, review the new
+   commit and request fresh approval. After merging, confirm GitHub reports
+   the PR as merged.
 
 ## Remote ticket planning
 

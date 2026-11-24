@@ -71,6 +71,33 @@ agent configuration, and the Git index in place.
 The original role-only installer is available from a clean workflow-pack
 checkout with `node engineering-workflows/install.mjs /absolute/path/to/target-repository`.
 
+## Upgrade to another pinned revision
+
+From the target project's Git root, run the command with the full commit SHA
+of the desired revision. Git access to the pack source is needed to read the
+currently installed revision for comparison.
+
+```sh
+npx --yes --allow-git=root --package='git+ssh://git@github.com/yairabf/my-ai-workflow.git#<new-commit>' -- engineering-workflows upgrade
+```
+
+Upgrade updates the roles under `.agents/skills/` and `.claude/skills/`, the
+bundled sources under `.engineering-workflows/prerequisites/`, and the
+Engineering Workflows CI file if present. It preserves edits to files
+unchanged upstream and leaves separately installed prerequisites alone.
+
+If the upgrade reports conflicting paths, it has made no changes. Save any
+local edits you want to carry forward, resolve the listed files against the
+old or new revision, and retry with the same pin. After success, reapply any
+saved edits you still need. The recorded pin changes only after the upgrade
+has applied the file updates. Running upgrade with the installed pin again
+reports that it is already installed.
+
+If the process was forcibly interrupted and left an empty
+`.engineering-workflows/.upgrade-lock` directory, confirm the previous
+upgrade process has exited, remove that empty directory, and retry with the
+same pin.
+
 ## Load the skills in your harness
 
 Open the prepared target checkout in the harness that will run the mission.

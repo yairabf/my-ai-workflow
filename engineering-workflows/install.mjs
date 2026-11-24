@@ -15,14 +15,28 @@ import {
   writeFileSync,
 } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { dirname, join, resolve } from 'node:path'
+import { basename, dirname, join, posix, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const pack = fileURLToPath(new URL('.', import.meta.url))
-const source = dirname(resolve(pack))
+export const sourceRoot = dirname(resolve(pack))
 const roles = ['workflow-initiate', 'workflow-investigate', 'workflow-plan', 'workflow-implement', 'workflow-review']
 const roots = ['.agents/skills', '.claude/skills']
 const prerequisites = ['.agents/skills/grill-me', '.agents/skills/grilling']
+
+export const rolePaths = roots.flatMap((root) => roles.map((role) => {
+  const target = `${root}/${role}`
+  return { source: `engineering-workflows/${target}`, target }
+}))
+export const bundledPaths = prerequisites.map((source) => ({
+  source,
+  target: `.engineering-workflows/prerequisites/${basename(source)}`,
+}))
+export const ciPath = {
+  source: 'engineering-workflows/workflows/engineering-workflows.yml',
+  target: '.github/workflows/engineering-workflows.yml',
+}
+export const stampPath = '.engineering-workflows/revision.txt'
 
 function git(directory, ...args) {
   return execFileSync('git', ['-C', directory, ...args], {
@@ -95,8 +109,8 @@ export function register(from, to) {
 }
 
 function checkoutRevision() {
-  const revision = git(source, 'rev-parse', 'HEAD')
-  const changes = git(source, 'status', '--porcelain', '--untracked-files=all', '--ignored=matching',
+  const revision = git(sourceRoot, 'rev-parse', 'HEAD')
+  const changes = git(sourceRoot, 'status', '--porcelain', '--untracked-files=all', '--ignored=matching',
     '--', 'engineering-workflows', ...prerequisites)
   if (changes) throw new Error('Run the installer from a clean checkout of the chosen pack revision.')
   return revision
@@ -104,32 +118,28 @@ function checkoutRevision() {
 
 export function install(target, revision = checkoutRevision(), { githubCi = false } = {}) {
   const destination = targetPath(target, '.engineering-workflows')
-  const stamp = join(destination, 'revision.txt')
+  const stamp = join(target, stampPath)
   if (stat(stamp)?.isFile()) {
     const previous = readFileSync(stamp, 'utf8').trim()
     if (/^[a-f0-9]{40}$/.test(previous) && previous !== revision) {
-      throw new Error(`A different workflow pack revision is installed at ${stamp} (${previous}).`)
+      throw new Error(`A different workflow pack revision is installed at ${stamp} (${previous}). Run engineering-workflows upgrade with the desired pin.`)
     }
   }
   const resources = mkdtempSync(join(tmpdir(), 'engineering-workflows-'))
   try {
     const bundled = join(resources, 'prerequisites')
     mkdirSync(bundled)
-    for (const path of prerequisites) {
-      cpSync(join(source, path), join(bundled, path.split('/').at(-1)), { recursive: true })
+    for (const path of bundledPaths) {
+      cpSync(join(sourceRoot, path.source), join(bundled, basename(path.target)), { recursive: true })
     }
     writeFileSync(join(resources, 'revision.txt'), revision + '\n')
 
-    const copies = roots.flatMap((root) => roles.map((role) => {
-      const path = `${root}/${role}`
-      return [join(pack, path), targetPath(target, path)]
-    }))
+    const copies = rolePaths.map((path) => [join(sourceRoot, path.source), targetPath(target, path.target)])
     copies.push([resources, destination])
     if (githubCi) {
-      const workflow = 'engineering-workflows.yml'
       copies.push([
-        join(pack, 'workflows', workflow),
-        join(targetPath(target, '.github/workflows'), workflow),
+        join(sourceRoot, ciPath.source),
+        join(targetPath(target, posix.dirname(ciPath.target)), basename(ciPath.target)),
       ])
     }
 

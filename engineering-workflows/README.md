@@ -247,3 +247,11 @@ plan. The operator can invoke it directly or from a harness with shell access.
 `get` retrieves the last completed plan for that repository and issue. A failed
 rerun leaves the previous plan available. See the [builder pilot](workflows/development.md#remote-ticket-planning)
 for first-use requirements and the project-switching check.
+
+## Track a mission locally
+
+Use the [mission controller](mission/README.md) to save a GitHub ticket, see the
+next role and its input files, and record handoffs through plan approval,
+independent review, repair, and GitHub delivery. Run each role in the appropriate
+session and submit its output from the local CLI. Use the same state directory
+to resume after a restart or look up a previous ticket.

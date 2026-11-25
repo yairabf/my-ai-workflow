@@ -23,7 +23,7 @@
   - [x] 9a. **One-command setup** — From a target Git project, run one version-pinned command that installs Initiate, Investigator, and all six prerequisites, reuses working installations, and reports anything that needs repair.
   - [x] 9b. **Safe upgrades** — Update the installed pack to another pinned version while preserving local edits.
   - [ ] 9c. **Private package release** — Publish a versioned Engineering Workflows package to GitHub Packages and verify the short npm setup command in a fresh Git project.
-- [ ] 10. **Mission controller** — Record mission state and automate role handoffs, plan approvals, bounded retries, and recovery after restarts.
+- [x] 10. **Mission controller** — Record mission state and automate role handoffs, plan approvals, bounded retries, and recovery after restarts.
 - [ ] 11. **OpenHands execution adapter** — Start separate agent sessions on the builder, apply role-specific workspace access, and capture each stage’s output.
 - [ ] 12. **MCP mission interface** — Let external clients submit missions and check their status through a common interface.
 - [ ] 13. **GrokBot and Hermes integration** — Teach each bot how to submit a mission, show a plan awaiting approval, and report the resulting PR.

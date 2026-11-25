@@ -14,7 +14,7 @@ const usage = `Usage: node engineering-workflows/mission-controller.mjs --state 
   record KIND FILE.md --at REVISION
   approve PLAN_FILENAME --at REVISION
 
-Kinds: ready, brief, clarification, plan, plan-feedback, candidate, review,
+Kinds: ready, initialized-base, brief, investigation-question, investigation-answer, planning-question, clarification, plan, plan-feedback, candidate, review,
        evidence, repair, continue, delivery, head-changed`
 
 function identity(repository, number) {

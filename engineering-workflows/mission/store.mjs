@@ -21,7 +21,7 @@ export function containsPath(parent, child) {
 }
 
 const states = new Set([
-  'preparation', 'investigation', 'planning', 'approval', 'implementation',
+  'preparation', 'investigation', 'investigation-waiting', 'planning', 'planning-waiting', 'approval', 'implementation',
   'review', 'review-blocked', 'repair', 'repair-paused', 'delivery', 'delivery-head-changed', 'delivered',
 ])
 
@@ -142,8 +142,10 @@ function hasStageInputs(mission) {
   const { stage, ready, brief, plans, candidates, delivery } = mission
   if (stage === 'preparation') return true
   if (typeof ready?.file !== 'string' || typeof ready.base !== 'string' || typeof ready.checkout !== 'string') return false
+  if (stage === 'investigation-waiting') return mission.notes.at(-1)?.kind === 'investigation-question'
   if (stage === 'investigation') return true
   if (typeof brief !== 'string') return false
+  if (stage === 'planning-waiting') return mission.notes.at(-1)?.kind === 'planning-question'
   if (stage === 'planning') return true
   if (!plans.length) return false
   if (stage === 'approval') return true

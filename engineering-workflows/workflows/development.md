@@ -361,3 +361,12 @@ existing `graphify-out/graph.json`. The query runs against a temporary copy so
 Graphify’s query logs leave the source graph untouched. A previously verified
 checkout must still have the expected pack revision to skip setup. The writer saves the brief
 and exposes the completed plan only after the planner returns a pending decision.
+
+## Run an implementation mission on OpenHands
+
+Use the [builder run and resume commands](../mission/README.md#run-a-ticket-on-the-builder)
+for implementation tickets. The investigator can test hypotheses in an
+explicitly assigned disposable clone, including experiments on an empty
+project. When a material decision is missing, the operator answers the saved
+question before investigation resumes. The separate ticket-planning command
+continues to use read-only sessions.

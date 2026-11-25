@@ -18,7 +18,7 @@ Switching repositories or agent harnesses means moving skills and rewriting prom
 
 - Begin with one operator and one mission at a time on a private or local builder. Extend the first pilot to two repositories to verify project switching and plan retrieval.
 - Initiate uses authorized write access before the first investigation. Record readiness per harness after verifying all six prerequisites in the [preparation checklist](../../engineering-workflows/.agents/skills/workflow-initiate/references/preparation.md). Reuse a ready checkout. Report missing prerequisites in a previously marked checkout.
-- Start roles in fresh sessions with explicit handoff files. Investigation and review have read-only access. Implementation can write to its dedicated worktree.
+- Start roles in fresh sessions with explicit handoff files. Investigation can experiment in an isolated disposable copy when the builder provides one. Review has read-only access. Implementation can write to its dedicated worktree.
 - Require human approval of the plan before coding. Pause for a decision when missing information would change scope or acceptance criteria.
 - Review the exact candidate commit against the original mission, approved plan, code, and test evidence. Keep the coder's chat and self-assessment out of the review handoff.
 - Return blocking findings to the coder. Review each revised commit in a fresh session and pause for human input after two unsuccessful repair attempts. A passing review leads to a PR and target-repository CI. A human decides whether to merge.

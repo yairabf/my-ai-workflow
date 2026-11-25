@@ -15,13 +15,13 @@ function populatedSection(text, title) {
   return section
 }
 
-function field(text, name) {
+export function field(text, name) {
   const values = text.split('\n').flatMap((line) => {
     const match = new RegExp('^(?:[-*] )?\\*\\*' + name + '(?::\\*\\*|\\*\\* *(?:—|:)) +(.+)$').exec(line)
     return match ? [match[1].trim()] : []
   })
   requireInput(values.length === 1 && values[0], 'Expected one Markdown field named ' + name + '.')
-  return values[0]
+  return values[0].replace(/^`([^`]+)`$/, '$1')
 }
 
 function references(text, artifact, description) {
@@ -33,7 +33,7 @@ function references(text, artifact, description) {
   }
 }
 
-function matchesTicket(mission, text) {
+export function matchesTicket(mission, text) {
   const citations = text.match(/https?:\/\/[^\s<>"'`()\[\]]+/gi) ?? []
   const expected = issueUrl(mission)
   requireInput(citations.some((url) => url.replace(/[.,;:!]+$/, '').toLowerCase() === expected),
@@ -50,8 +50,8 @@ function atStage(mission, kind, ...stages) {
   requireInput(stages.includes(mission.stage), 'Cannot record ' + kind + ' during ' + mission.stage + '. Run status.')
 }
 
-function ready(mission, text, store) {
-  atStage(mission, 'ready', 'preparation')
+function ready(mission, text, store, initialized = false) {
+  atStage(mission, 'ready', initialized ? 'implementation' : 'preparation')
   const checkout = field(text, 'Checkout')
   requireInput(isAbsolute(checkout) && lstatSync(checkout, { throwIfNoEntry: false })?.isDirectory(),
     'Checkout must name an existing absolute target checkout directory.')
@@ -59,6 +59,15 @@ function ready(mission, text, store) {
   requireInput(!containsPath(canonicalCheckout, store.root),
     'Choose a state directory outside the target checkout.')
   populatedSection(text, 'Readiness')
+  if (initialized) {
+    const previous = operatorFile(store.artifact(mission.ready.file))
+    requireInput(field(previous, 'Starting commit') === 'unborn' && !mission.candidates.length &&
+      canonicalCheckout === mission.ready.checkout && field(text, 'Base branch') === mission.ready.base,
+      'Expected the original unborn checkout and base branch before the first candidate.')
+    sha(field(text, 'Starting commit'))
+    delete mission.brief
+    mission.plans = []
+  }
   mission.ready = { file: store.saveArtifact('ready', text), base: field(text, 'Base branch'), checkout: canonicalCheckout }
   mission.stage = 'investigation'
 }
@@ -224,9 +233,26 @@ export function record(mission, kind, text, store) {
   matchesTicket(mission, text)
   switch (kind) {
     case 'ready': return ready(mission, text, store)
+    case 'initialized-base': return ready(mission, text, store, true)
     case 'brief': return brief(mission, text, store)
     case 'plan': return plan(mission, text, store)
-    case 'clarification': return note(mission, kind, text, store, 'planning')
+    case 'investigation-question':
+      for (const title of ['Findings', 'Question', 'Why it matters']) populatedSection(text, title)
+      return note(mission, kind, text, store, 'investigation', 'investigation-waiting')
+    case 'investigation-answer':
+      populatedSection(text, 'Answer')
+      references(text, mission.notes.at(-1)?.file, 'investigation question')
+      return note(mission, kind, text, store, 'investigation-waiting', 'investigation')
+    case 'planning-question':
+      for (const title of ['Question', 'Why it matters']) populatedSection(text, title)
+      return note(mission, kind, text, store, 'planning', 'planning-waiting')
+    case 'clarification':
+      if (mission.stage === 'planning-waiting') {
+        populatedSection(text, 'Answer')
+        references(text, mission.notes.at(-1).file, 'planning question')
+        return note(mission, kind, text, store, 'planning-waiting', 'planning')
+      }
+      return note(mission, kind, text, store, 'planning')
     case 'plan-feedback': return note(mission, kind, text, store, 'approval', 'planning')
     case 'candidate': return candidate(mission, text, store, false)
     case 'repair': return candidate(mission, text, store, true)

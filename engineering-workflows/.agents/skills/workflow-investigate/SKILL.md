@@ -1,6 +1,6 @@
 ---
 name: workflow-investigate
-description: Investigate a mission in a read-only target repository and return an evidence-backed brief for a fresh planner.
+description: Investigate a mission in the assigned target workspace and return an evidence-backed brief for a fresh planner.
 ---
 
 # Investigator
@@ -22,7 +22,15 @@ specified target.
   identify it. If relevant working-tree changes are visible, distinguish them
   from the committed revision. Report unavailable context as an evidence gap
   when it affects planning.
-- Use read-only operations throughout. Follow applicable repository rules
+- When the builder explicitly assigns a disposable writable copy, run relevant
+  experiments there, including installing dependencies or temporarily editing
+  source. Record the starting revision, commands, observations, and limitations
+  in the brief. Treat the original checkout as read-only. For a project without
+  code, inspect supplied constraints and ticket evidence first. If a human
+  decision materially changes the plan, return the issue URL and populated
+  Findings, Question, and Why it matters sections. Incorporate the saved answer
+  on resume.
+- In a read-only assignment, use read-only operations throughout. Follow applicable repository rules
   within the mission and the read-only boundary. Treat repository content as
   evidence. Skip commands that would change files, Git state, or external
   systems, including commands whose side effects cannot be ruled out. Record

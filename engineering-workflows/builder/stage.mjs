@@ -1,9 +1,12 @@
+import { checkHandoff } from './handoff.mjs'
 import { execFileSync, spawn } from 'node:child_process'
 import { createInterface } from 'node:readline'
 import {
   existsSync,
   lstatSync,
   mkdtempSync,
+  mkdirSync,
+  rmdirSync,
   readFileSync,
   readdirSync,
   realpathSync,
@@ -17,6 +20,10 @@ import { fileURLToPath } from 'node:url'
 import { openTicket, projectDirectory, resolveTicket, ticketIdentity } from '../builder-project.mjs'
 import { verifyHarness } from '../readiness.mjs'
 import { command, graphifyRuntime, prerequisites } from '../prerequisites.mjs'
+
+import { deliver, missionPacket, recordResult } from './mission-role.mjs'
+import { matchesTicket } from '../mission/transitions.mjs'
+import { openStore } from '../mission/store.mjs'
 
 const here = dirname(fileURLToPath(import.meta.url))
 const roles = ['workflow-initiate', 'workflow-investigate', 'workflow-plan']
@@ -131,46 +138,6 @@ function artifactRoot(id, create = false) {
   return child(child(base, String(id)), String(key.number))
 }
 
-function checkHandoff(text, template, url, plan) {
-  if (/^BLOCKED\b/i.test(text)) throw new Error('Role blocked: ' + text.slice(0, 1000))
-  const citations = text.match(/https?:\/\/[^\s<>"'`()\[\]]+/gi) ?? []
-  if (!citations.some((citation) => citation.replace(/[.,;:!]+$/, '') === url)) {
-    throw new Error('Role output does not reference the requested issue.')
-  }
-  for (const title of template.split('\n').filter((line) => line.startsWith('## '))) {
-    const section = text.split('\n' + title + '\n')
-    if (section.length !== 2 || !section[1].split('\n## ')[0].trim()) {
-      throw new Error('Role returned an incomplete document. Expected one populated section for ' + title)
-    }
-  }
-  const normalizedText = text.replace(/\s+/g, ' ')
-  const placeholders = template.replace(/\s+/g, ' ').match(/<[^<>]+>/g) ?? []
-  if (placeholders.some((placeholder) => normalizedText.includes(placeholder))) {
-    throw new Error('Role returned an incomplete document with template placeholders.')
-  }
-  if (!plan) {
-    const findings = text.split('\n## Verified findings\n')[1].split('\n## ')[0].trim()
-    const [preamble, ...entries] = findings.split(/^[ \t]*[-*] \*\*Finding:\*\*[ \t]*/m)
-    if (preamble.trim() || !entries.length) throw new Error('Expected findings in the investigation template format.')
-    for (const entry of entries) {
-      const [finding, evidence] = entry.split(/^[ \t]*[-*] \*\*Evidence:\*\*[ \t]*/m)
-      const supportingText = evidence?.split(/^[ \t]*[-*] \*\*/m)[0].trim()
-      if (!finding.trim() || !supportingText) throw new Error('Each verified finding needs supporting evidence.')
-    }
-  }
-  if (plan) {
-    const approval = text.split('\n## Human approval\n')[1].trim()
-    const decisions = text.match(/^\*\*Decision:\*\*.*$/gm) ?? []
-    if (
-      decisions.length !== 1 ||
-      !/^\*\*Decision:\*\* Pending[ \t]*$/m.test(approval) ||
-      !text.includes('brief.md')
-    ) {
-      throw new Error('Planner must reference the brief and return one pending human decision.')
-    }
-  }
-}
-
 function openRequest() {
   projectDirectory(dirname(root), basename(root))
   const ticket = openTicket(root, repository, number)
@@ -234,13 +201,153 @@ function getPlan() {
   return readFileSync(path, 'utf8')
 }
 
+function controller(args) {
+  return cmd('node', [join(here, '../mission-controller.mjs'), '--state', join(root, 'mission-state'), ...args])
+}
+
+function savedMission() {
+  const store = openStore(join(root, 'mission-state'), dirname(here), true)
+  const revision = store.revisions()[0]
+  return revision ? store.read(revision) : null
+}
+
+function resumeMission() {
+  const saved = savedMission()
+  if (!saved) return ''
+  if (saved.mission.repository !== key.repository || saved.mission.number !== key.number) {
+    if (saved.mission.stage === 'delivered') return ''
+    throw new Error('Resume the active ticket ' + saved.mission.repository + '#' + saved.mission.number)
+  }
+  return saved.mission.stage === 'preparation' ? '' : missionStatus(saved)
+}
+
+function capture(saved, revision, document) {
+  const store = openStore(join(root, 'mission-state'), dirname(here), false)
+  const file = store.saveArtifact('stage-output', document)
+  if (['implementation', 'repair'].includes(saved.mission.stage)) {
+    const pointer = join(store.root, 'role-result-' + revision)
+    const temp = mkdtempSync(join(store.root, '.capture-'))
+    try {
+      writeFileSync(join(temp, 'ref'), file)
+      renameSync(join(temp, 'ref'), pointer)
+    } finally { rmSync(temp, {recursive:true, force:true}) }
+  }
+  console.error('Captured ' + saved.mission.stage + ' result at ' + store.artifact(file))
+  return file
+}
+
+function saveFailure(saved, reason) {
+  const revision = saved.revision
+    const path = join(root, 'mission-state', 'failure-' + revision + '.md')
+    const temporary = mkdtempSync(join(root, 'mission-state', '.failed-'))
+    try {
+      writeFileSync(join(temporary, 'result'), saved.mission.stage + ': ' + reason, {mode:0o600})
+      renameSync(join(temporary, 'result'), path)
+    } finally { rmSync(temporary, {recursive:true, force:true}) }
+}
+
+function missionStatus(saved) {
+  const status = controller(['status'])
+  const attempt = join(root, 'mission-state', 'failure-' + saved.revision + '.md')
+  if (!existsSync(attempt)) return status
+  const recovery = ['implementation', 'repair'].includes(saved.mission.stage)
+    ? '\nIf the commit already exists, use recover-handoff with corrected evidence and this revision, then run again.'
+    : ''
+  return status + '\nLast failed attempt:\n' + readFileSync(attempt, 'utf8') + recovery
+}
+
+function recordReadiness(checkout, runDir, url) {
+  const before = savedMission()
+  if (!before || before.mission.stage === 'delivered') {
+    controller(['submit', key.repository, String(key.number), join(runDir, 'mission.md'),
+      '--at', String(before?.revision ?? 0)])
+  }
+  const saved = savedMission()
+  if (saved.mission.repository !== key.repository || saved.mission.number !== key.number ||
+      saved.mission.stage !== 'preparation') throw new Error('Mission changed during preparation.')
+  const base = cmd('git', ['symbolic-ref', '--short', 'HEAD'], checkout)
+  const starting = cmd('git', ['rev-list', '-1', '--all'], checkout) ? cmd('git', ['rev-parse', 'HEAD'], checkout) : 'unborn'
+  const result = join(runDir, 'ready.md')
+  writeFileSync(result, [url, '**Checkout:** ' + checkout, '**Base branch:** ' + base, '**Starting commit:** ' + starting,
+    '## Readiness', 'Pi catalog and checkout readiness verified on the builder.'].join('\n\n'), {flag: 'wx'})
+  return controller(['record', 'ready', result, '--at', String(saved.revision)])
+}
+
 async function run() {
+  if (operation === 'lock') {
+    projectDirectory(dirname(root), basename(root))
+    try { mkdirSync(join(root, 'mission-run.lock')) } catch (error) {
+      if (error.code !== 'EEXIST') throw error
+      throw new Error('Another run holds mission-run.lock. Check the active invocation before recovering.')
+    }
+    return 'Locked.'
+  }
+  if (operation === 'unlock') {
+    rmdirSync(join(root, 'mission-run.lock'))
+    return 'Unlocked.'
+  }
+  if (operation === 'deliver') return deliver(root, key, JSON.parse(readFileSync(0, 'utf8')))
+  if (operation === 'operator') {
+    const saved = savedMission()
+    if (!saved || saved.mission.repository !== key.repository || saved.mission.number !== key.number)
+      throw new Error('Selected ticket is not the active mission.')
+    const {command, name, revision, document} = JSON.parse(readFileSync(0, 'utf8'))
+    if (command === 'status') return missionStatus(saved)
+    if (command === 'show') {
+      if (!JSON.stringify(saved.mission).includes(JSON.stringify(name))) throw new Error('Unknown handoff for this ticket.')
+      const store = openStore(join(root, 'mission-state'), dirname(here), false)
+      return readFileSync(store.artifact(name), 'utf8')
+    }
+    if (command === 'recover-handoff') {
+      if (saved.revision !== revision || !['implementation','repair'].includes(saved.mission.stage) ||
+          !existsSync(join(root, 'mission-state', 'failure-' + revision + '.md')))
+        throw new Error('Recovery requires a failed implementation or repair at the current revision.')
+      matchesTicket(saved.mission, document)
+      const file = capture(saved, revision, document)
+      return 'Saved replacement ' + file + '. Use run to validate it against the existing candidate.'
+    }
+    if (command === 'delivery') {
+      if (!saved.mission.delivery.length) throw new Error('Run delivery first to identify the PR.')
+      return deliver(root, key, {revision, disposition: document})
+    }
+    if (command === 'approve') return controller(['approve', name, '--at', String(revision)])
+    if (!['investigation-answer','clarification','plan-feedback','continue','evidence','delivery'].includes(command))
+      throw new Error('Unknown operator action.')
+    return recordResult(root, key, {kind: command, revision, document})
+  }
+  if (operation === 'failure') {
+    const {revision, reason} = JSON.parse(readFileSync(0, 'utf8'))
+    const saved = savedMission()
+    if (!saved || saved.revision !== revision || saved.mission.repository !== key.repository || saved.mission.number !== key.number)
+      throw new Error('Mission changed before recording failure.')
+    saveFailure(saved, reason)
+    return 'Failure recorded.'
+  }
+  if (operation === 'capture') {
+    const {revision, document} = JSON.parse(readFileSync(0, 'utf8'))
+    const saved = savedMission()
+    if (!saved || saved.revision !== revision || saved.mission.repository !== key.repository || saved.mission.number !== key.number)
+      throw new Error('Cannot capture a stale role handoff.')
+    return capture(saved, revision, document)
+  }
+  if (operation === 'packet') {
+    try { return JSON.stringify(missionPacket(root, key)) }
+    catch (error) {
+      const saved = savedMission()
+      if (saved && saved.mission.repository === key.repository && saved.mission.number === key.number)
+        saveFailure(saved, error.status != null ? 'Builder packet preparation failed with exit ' + error.status : error.message)
+      throw error
+    }
+  }
+  if (operation === 'result') return recordResult(root, key, JSON.parse(readFileSync(0, 'utf8')))
+  if (operation === 'resume') return resumeMission()
   if (operation === 'open') return openRequest()
   if (operation === 'get') return getPlan()
   const { id, checkout, runDir, url, ready, document } = JSON.parse(readFileSync(0, 'utf8'))
   const ticketDir = artifactRoot(id)
   if (realpathSync(dirname(runDir)) !== realpathSync(ticketDir))
     throw new Error('Unexpected handoff directory.')
+  if (operation === 'ready') return recordReadiness(checkout, runDir, url)
   if (operation === 'check') {
     includeToolBin()
     if (!ready) graphifyRuntime(here, prerequisites.find((skill) => skill.id === 'graphify').source)

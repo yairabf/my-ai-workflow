@@ -12,7 +12,9 @@ function displayReview(mission, show, candidate) {
 
 const next = {
   preparation: 'Run Initiate or verify readiness for the target checkout, then record ready.',
-  investigation: 'Run Investigator in a fresh read-only session, then record brief.',
+  investigation: 'Run Investigator with assigned workspace access, then record brief or investigation-question.',
+  'investigation-waiting': 'Record investigation-answer for the saved question to resume.',
+  'planning-waiting': 'Record clarification with the saved planning question filename and an Answer section.',
   planning: 'Run Planner in a fresh read-only session, then record plan or clarification.',
   approval: 'Approve this exact plan filename or record plan-feedback.',
   implementation: 'Run Developer in a fresh session on a dedicated branch and worktree, then record candidate.',
@@ -55,12 +57,17 @@ export function showStatus(store, { mission, revision }, current = true) {
   console.log(`${mission.repository}#${mission.number} · ${stage} · revision ${revision}`)
   show('Mission', mission.file)
   show('Target context', mission.ready?.file)
-  if (['planning', 'approval'].includes(stage)) {
+  if (['planning', 'planning-waiting', 'approval'].includes(stage)) {
     show('Investigation brief', mission.brief)
+    if (stage === 'planning-waiting') show('Planner question', mission.notes.at(-1).file)
     if (stage === 'planning') show('Plan draft to revise', mission.plans.at(-1)?.file)
     for (const note of mission.notes.filter(({ kind }) => ['clarification', 'plan-feedback'].includes(kind))) {
       show(note.kind === 'clarification' ? 'Planning clarification' : 'Plan feedback', note.file)
     }
+  }
+  if (['investigation', 'investigation-waiting', 'planning'].includes(stage)) {
+    for (const note of mission.notes.filter(note => note.kind.startsWith('investigation-')))
+      show(note.kind === 'investigation-question' ? 'Investigator question' : 'Operator answer', note.file)
   }
   const plan = mission.plans.at(-1)
   if (stage === 'approval') {

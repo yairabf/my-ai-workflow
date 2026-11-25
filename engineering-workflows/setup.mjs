@@ -39,14 +39,14 @@ function packSource() {
   return { revision: commit, repository: hostedSource }
 }
 
-const usage = 'Usage: engineering-workflows <setup|upgrade> | <plan|get> <owner/repository> <issue-number>'
+const usage = 'Usage: engineering-workflows <setup|upgrade> | <plan|get|run> <owner/repository> <issue-number>'
 try {
   const args = process.argv.slice(2)
   if (args.length === 1 && args[0] === '--help') {
     console.log(usage)
-  } else if (args[0] === 'plan' || args[0] === 'get') {
+  } else if (['plan', 'get', 'run'].includes(args[0])) {
     const { runBuilderRequest } = await import('./builder-plan.mjs')
-    runBuilderRequest(args)
+    await runBuilderRequest(args)
   } else if (args.length === 1 && args[0] === 'upgrade') {
     const target = checkoutRoot(process.cwd())
     const { revision, repository } = packSource()

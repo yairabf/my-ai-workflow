@@ -255,3 +255,6 @@ next role and its input files, and record handoffs through plan approval,
 independent review, repair, and GitHub delivery. Run each role in the appropriate
 session and submit its output from the local CLI. Use the same state directory
 to resume after a restart or look up a previous ticket.
+
+For a full implementation ticket on the Windows builder, use the
+[mission execution adapter](mission/README.md#run-a-ticket-on-the-builder).

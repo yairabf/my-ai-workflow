@@ -2,13 +2,18 @@
 import { execFileSync } from 'node:child_process'
 import { posix, resolve } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
+import { operatorFile } from './mission/store.mjs'
+import { drive } from './builder/drive.mjs'
 import { ticketIdentity } from './builder-project.mjs'
 
 const writer = process.env.EW_BUILDER_WRITER || 'openhands-canvas'
 const reader = process.env.EW_BUILDER_READER || 'ew-pilot-reader'
 const pack = fileURLToPath(new URL('./', import.meta.url))
-const usage =
-  'Usage: node engineering-workflows/builder-plan.mjs <plan|get> <owner/repository> <issue-number>'
+const usage = `Usage: node engineering-workflows/builder-plan.mjs COMMAND OWNER/REPO ISSUE [OPERANDS]
+  plan | get | run | status
+  show HANDOFF_FILENAME
+  approve PLAN_FILENAME REVISION
+  investigation-answer | clarification | plan-feedback | continue | evidence | recover-handoff | delivery FILE.md REVISION`
 
 function docker(args, input) {
   return execFileSync('docker', args, {
@@ -64,23 +69,29 @@ function sharedRoot() {
     )
   )
     throw new Error('Reader has a writable mount overlapping the project storage.')
-  return root
+  return {root, source}
 }
 
-function main(args) {
+async function main(args) {
   const [op, repo, number, ...extra] = args
   if (op === '--help') return console.log(usage)
-  if (!['get', 'plan'].includes(op) || extra.length) throw new Error(usage)
+  const operator = ['status','show','approve','investigation-answer','clarification','plan-feedback','continue','evidence','recover-handoff','delivery'].includes(op)
+  const count = !operator || op === 'status' ? 0 : op === 'show' ? 1 : 2
+  if ((!operator && !['get', 'plan', 'run'].includes(op)) || extra.length !== count) throw new Error(usage)
   ticketIdentity(repo, number)
-  const root = sharedRoot()
+  const {root, source} = sharedRoot()
   const stages = new Map()
-  function stage(container, operation, data) {
+  function staging(container) {
     if (!stages.has(container)) {
       const dir = docker(['exec', container, 'mktemp', '-d', '/tmp/ew-builder.XXXXXXXX'])
       if (!/^\/tmp\/ew-builder\.[A-Za-z0-9]+$/.test(dir)) throw new Error('Invalid staging directory.')
       stages.set(container, dir)
       docker(['cp', pack + '.', container + ':' + dir])
     }
+    return stages.get(container)
+  }
+  function stage(container, operation, data) {
+    staging(container)
     return docker(
       [
         'exec',
@@ -97,7 +108,34 @@ function main(args) {
     )
   }
   try {
+    if (operator) {
+      const [name, at] = extra
+      const revision = Number(at)
+      if (count === 2 && (!Number.isSafeInteger(revision) || revision <= 0)) throw new Error('Supply the observed revision.')
+      const document = count === 2 && op !== 'approve' ? operatorFile(name) : undefined
+      if (count === 2) stage(writer, 'lock')
+      try {
+        return console.log(stage(writer, 'operator', {command: op, name, revision, document}))
+      } finally {
+        if (count === 2) stage(writer, 'unlock')
+      }
+    }
     if (op === 'get') return console.log(stage(writer, 'get'))
+    if (op === 'run') {
+      stage(writer, 'lock')
+      try {
+        const current = stage(writer, 'resume')
+        if (!current) {
+          const run = JSON.parse(stage(writer, 'open'))
+          console.error(stage(reader, 'check', run))
+          console.error(stage(writer, 'mark', run))
+          console.error(stage(writer, 'ready', run))
+        }
+        return console.log(await drive({docker, stage, writer, reader, staging: staging(reader), writerStaging: staging(writer), root, source}))
+      } finally {
+        stage(writer, 'unlock')
+      }
+    }
     const run = JSON.parse(stage(writer, 'open'))
     console.error(stage(reader, 'check', run))
     console.error(stage(writer, 'mark', run))
@@ -117,9 +155,9 @@ function main(args) {
   }
 }
 
-export function runBuilderRequest(args) {
+export async function runBuilderRequest(args) {
   try {
-    main(args)
+    await main(args)
   } catch (error) {
     if (typeof error.status === 'number') throw new Error('Builder command failed. See the stage diagnostic above.')
     throw error
@@ -128,7 +166,7 @@ export function runBuilderRequest(args) {
 
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   try {
-    runBuilderRequest(process.argv.slice(2))
+    await runBuilderRequest(process.argv.slice(2))
   } catch (error) {
     console.error(error.message)
     process.exitCode = 1

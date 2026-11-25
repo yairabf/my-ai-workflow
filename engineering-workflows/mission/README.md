@@ -184,3 +184,57 @@ the approved plan, passing SHA, PR URL, saved CI evidence, and human merge
 decision. Run `node --test engineering-workflows/mission/mission-controller.test.mjs`
 to exercise competing submissions, interrupted writes, approval invalidation,
 blocked review, bounded repair, and stale delivery evidence.
+
+## Run a ticket on the builder
+
+An empty repository can go through investigation and planning. Before implementation,
+initialize and publish the base branch from the builder checkout named in the status
+message. Run the same ticket again. The builder records the initial commit, repeats
+investigation and planning with the saved operator answers, and waits for approval
+of the new plan.
+
+
+Point the Docker CLI at the Windows builder and run
+`node engineering-workflows/builder-plan.mjs run OWNER/REPO ISSUE` from the
+repository root. Preparation checks the reader's Pi catalog and records the
+checkout and base branch in the mission controller. Repeat the same command
+to resume using the saved revision. A different active ticket is reported
+before opening the requested checkout. Builder state is under
+`ew-remote/mission-state`. If the client terminates while holding
+`ew-remote/mission-run.lock`, verify that the original invocation has ended
+and inspect controller status before removing the empty lock directory.
+
+The adapter runs eligible roles until a human decision, a delivery result, or
+a failure. Each fresh Pi session uses the reader's configured runtime. Its
+workspace tool executes in a separate container with only the assigned project
+copy mounted. Investigation uses a temporary writable clone. Planning and
+review mount their workspace read-only. Implementation and repairs share the
+dedicated issue branch and clone. A changed or dirty candidate after an
+interruption needs reconciliation before another developer session.
+
+Use the same builder CLI with `status OWNER/REPO ISSUE` to see the stage,
+revision and saved filenames. Use `show OWNER/REPO ISSUE FILENAME` to read a
+handoff. For an investigator question, create a UTF-8 Markdown answer with the
+ticket URL, exact question filename and a populated `## Answer` section. Run
+`investigation-answer OWNER/REPO ISSUE ANSWER.md REVISION`, then `run` again.
+For a pending plan, inspect its contents and use
+`approve OWNER/REPO ISSUE PLAN_FILENAME REVISION`, then `run`. The
+`plan-feedback`, `evidence`, `continue`, and `delivery` commands accept a
+Markdown file and observed revision as documented in the handoff table above.
+Repeat `run` to refresh pending PR checks. Record the advisory disposition for
+the observed head after reviewing the findings. The operator decides on merge.
+
+If an implementation or repair has committed its work but the captured handoff
+fails validation, inspect the reported workspace, commit, failed check and saved
+output. Correct the Markdown using the actual commit and verification evidence.
+Run `recover-handoff OWNER/REPO ISSUE CORRECTED.md REVISION`, then `run`.
+The replacement is checked against the same workspace, SHA, branch, plan and
+mission revision before it can reach review. Recovery preserves the original
+captured artifact and does not invoke the developer again.
+
+If the planner needs a decision, status shows `planning-waiting` and the saved
+question filename. Read it with `show`. Write the ticket URL, that filename
+and a populated `## Answer` section in a UTF-8 file, then run
+`clarification OWNER/REPO ISSUE ANSWER.md REVISION` and resume with `run`.
+The new planner session receives the original brief, question and answer.
+Operator Markdown files may use Windows or Unix line endings.

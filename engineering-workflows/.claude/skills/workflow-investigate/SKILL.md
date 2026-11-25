@@ -1,6 +1,6 @@
 ---
 name: workflow-investigate
-description: Investigate a mission in a read-only target repository and return an evidence-backed brief for a fresh planner.
+description: Investigate a mission in the assigned target workspace and return an evidence-backed brief for a fresh planner.
 disable-model-invocation: true
 ---
 
